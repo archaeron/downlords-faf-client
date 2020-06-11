@@ -112,7 +112,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
     BooleanBinding inSearchableState = Bindings.createBooleanBinding(() -> state.get() != State.SEARCHING, state);
     searchController.setSearchButtonDisabledCondition(inSearchableState);
-    searchController.setOnlyShowLastYearCheckBoxVisible(true, true);
 
     pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
       SearchConfig searchConfig = searchController.getLastSearchConfig();
