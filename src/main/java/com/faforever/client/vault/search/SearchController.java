@@ -85,7 +85,6 @@ public class SearchController implements Controller<Pane> {
     onlyShowLastYearCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
       //TODO implement adding filter to query
     });
-    onlyShowLastYearCheckBox.setSelected(true);
     onlyShowLastYearCheckBox.managedProperty().bind(onlyShowLastYearCheckBox.visibleProperty());
     onlyShowLastYearCheckBox.setVisible(false);
 
@@ -255,8 +254,9 @@ public class SearchController implements Controller<Pane> {
     searchButton.disableProperty().bind(queryTextField.textProperty().isEmpty().or(inSearchableState.not()));
   }
 
-  public void setOnlyShowLastYearCheckBoxVisible(boolean visible) {
+  public void setOnlyShowLastYearCheckBoxVisible(boolean visible, boolean selectedBaseValue) {
     onlyShowLastYearCheckBox.setVisible(visible);
+    onlyShowLastYearCheckBox.setSelected(selectedBaseValue);
   }
 
   @Getter
