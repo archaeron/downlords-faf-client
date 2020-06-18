@@ -84,9 +84,11 @@ public class SearchController implements Controller<Pane> {
     //FIXME code style probably not good
     //FIXME this might always be visible, only show this on online replays
     onlyShowLastYearCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
-        //TODO implement adding filter to query
+      //TODO implement adding filter to query
     });
     onlyShowLastYearCheckBox.setSelected(true);
+    onlyShowLastYearCheckBox.managedProperty().bind(onlyShowLastYearCheckBox.visibleProperty());
+    onlyShowLastYearCheckBox.setVisible(false);
 
     initialLogicalNodeController.logicalOperatorField.managedProperty()
         .bind(initialLogicalNodeController.logicalOperatorField.visibleProperty());
@@ -256,6 +258,10 @@ public class SearchController implements Controller<Pane> {
 
   public void setSearchButtonDisabledCondition(BooleanBinding inSearchableState) {
     searchButton.disableProperty().bind(queryTextField.textProperty().isEmpty().or(inSearchableState.not()));
+  }
+
+  public void setOnlyShowLastYearCheckBoxVisible(boolean visible) {
+    onlyShowLastYearCheckBox.setVisible(visible);
   }
 
   @Getter
