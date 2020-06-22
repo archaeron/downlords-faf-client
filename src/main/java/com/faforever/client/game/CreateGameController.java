@@ -25,7 +25,7 @@ import com.faforever.client.reporting.ReportingService;
 import com.faforever.client.theme.UiService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.jfoenix.controls.JFXButton;
+import javafx.scene.control.Button;
 import com.jfoenix.controls.JFXDialog;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -33,7 +33,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.css.PseudoClass;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -106,7 +105,7 @@ public class CreateGameController implements Controller<Pane> {
   public Pane mapPreviewPane;
   public Label versionLabel;
   public CheckBox onlyForFriendsCheckBox;
-  public JFXButton generateMapButton;
+  public Button generateMapButton;
   @VisibleForTesting
   FilteredList<MapBean> filteredMapBeans;
   private Runnable onCloseButtonClickedListener;
@@ -151,8 +150,8 @@ public class CreateGameController implements Controller<Pane> {
     });
 
     Function<FeaturedMod, String> isDefaultModString = mod ->
-        Objects.equals(mod.getTechnicalName(), KnownFeaturedMod.DEFAULT.getTechnicalName()) ?
-            " " + i18n.get("game.create.defaultGameTypeMarker") : null;
+      Objects.equals(mod.getTechnicalName(), KnownFeaturedMod.DEFAULT.getTechnicalName()) ?
+      " " + i18n.get("game.create.defaultGameTypeMarker") : null;
 
     featuredModListView.setCellFactory(param ->
         new DualStringListCell<>(FeaturedMod::getDisplayName, isDefaultModString, STYLE_CLASS_DUAL_LIST_CELL, uiService)
@@ -224,13 +223,10 @@ public class CreateGameController implements Controller<Pane> {
     );
   }
 
+  // TODO method name is misleading
   private void adjustCreateGameButtonBackgroundColor(String newValue) {
-    PseudoClass invalidClass = PseudoClass.getPseudoClass("invalid");
-    if (Strings.isNullOrEmpty(newValue)) {
-      titleTextField.pseudoClassStateChanged(invalidClass, true);
-    } else {
-      titleTextField.pseudoClassStateChanged(invalidClass, false);
-    }
+    // TODO extract pseudo class to constant
+    titleTextField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), Strings.isNullOrEmpty(newValue));
   }
 
   private void initPassword() {
@@ -262,7 +258,7 @@ public class CreateGameController implements Controller<Pane> {
     modListView.scrollTo(modListView.getSelectionModel().getSelectedItem());
   }
 
-  protected void initMapSelection() {
+  private void initMapSelection() {
     filteredMapBeans = new FilteredList<>(
         mapService.getInstalledMaps().filtered(mapBean -> mapBean.getType() == Type.SKIRMISH).sorted((o1, o2) -> o1.getDisplayName().compareToIgnoreCase(o2.getDisplayName()))
     );
@@ -272,7 +268,7 @@ public class CreateGameController implements Controller<Pane> {
     mapListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> setSelectedMap(newValue)));
   }
 
-  protected void setSelectedMap(MapBean newValue) {
+  private void setSelectedMap(MapBean newValue) {
     JavaFxUtil.assertApplicationThread();
 
     if (newValue == null) {
