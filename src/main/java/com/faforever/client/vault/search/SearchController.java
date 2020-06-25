@@ -229,7 +229,7 @@ public class SearchController implements Controller<Pane> {
     Optional<Condition> condition = initialSpecification.appendTo(qBuilder);
     String lastYearQuery = "";
     if(onlyShowLastYearCheckBox.isVisible() && onlyShowLastYearCheckBox.isSelected()){
-      lastYearQuery = generateOnlyLastYearQuerry();
+      lastYearQuery = generateOnlyLastYearQuery();
     }
 
     if (!condition.isPresent()) {
@@ -245,7 +245,7 @@ public class SearchController implements Controller<Pane> {
     return condition.get().query(new RSQLVisitor())+";"+lastYearQuery;
   }
 
-  private String generateOnlyLastYearQuerry(){
+  private String generateOnlyLastYearQuery(){
     Calendar calendar = Calendar.getInstance();
     calendar.add(Calendar.YEAR, -1);
     Date date = calendar.getTime();
