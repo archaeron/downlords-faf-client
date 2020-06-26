@@ -121,8 +121,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     loadingPane.setVisible(false);
     backButton.setVisible(true);
     populateReplays(replays, searchResultPane, append);
-    //FIXME change this to fit the new pagination; always visible?
-    //moreButton.setVisible(replays.size() == MAX_SEARCH_RESULTS);
     pagination.setVisible(true);
   }
 
