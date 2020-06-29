@@ -112,6 +112,13 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     BooleanBinding inSearchableState = Bindings.createBooleanBinding(() -> state.get() != State.SEARCHING, state);
     searchController.setSearchButtonDisabledCondition(inSearchableState);
     searchController.setOnlyShowLastYearCheckBoxVisible(true, true);
+
+    pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
+      enterSearchingState();
+      SearchConfig searchConfig = searchController.getLastSearchConfig();
+
+      onPageChange(searchConfig, newValue.intValue() + 1);
+    });
   }
 
   private void displaySearchResult(List<Replay> replays, boolean append) {
@@ -234,7 +241,13 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private void onSearch(SearchConfig searchConfig) {
     enterSearchingState();
+    Platform.runLater(() -> pagination.setPageCount(0));
     displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, currentPage++, searchConfig.getSortConfig()));
+  }
+
+  private void onPageChange(SearchConfig searchConfig, int page) {
+    enterSearchingState();
+    displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, page, searchConfig.getSortConfig()), false);
   }
 
   private void displaySearchResult(List<Replay> replays) {
@@ -281,8 +294,10 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         .thenAccept(replays -> displaySearchResult(replays, true));
   }
 
-  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier) {
-    currentPage = 1;
+  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier, boolean startFromOne) {
+    if (startFromOne) {
+      currentPage = 1;
+    }
     currentSupplier = mapsSupplier;
     mapsSupplier.get()
         .thenAccept(this::displaySearchResult)
@@ -293,6 +308,10 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
           enterResultState();
           return null;
         });
+  }
+
+  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier) {
+    displayReplaysFromSupplier(mapsSupplier, true);
   }
 
   public void onMoreOwnButtonClicked() {

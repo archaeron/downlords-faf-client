@@ -70,6 +70,8 @@ public class SearchController implements Controller<Pane> {
    * Type of the searchable entity.
    */
   private Class<?> rootType;
+  private static String endTimeQueryStart = "endTime=ge=";
+  private SearchConfig lastSearchConfig;
 
   public SearchController(UiService uiService, I18n i18n, PreferencesService preferencesService) {
     this.uiService = uiService;
@@ -176,7 +178,12 @@ public class SearchController implements Controller<Pane> {
 
   public void onSearchButtonClicked() {
     String sortPropertyKey = getCurrentEntityKey();
-    searchListener.accept(new SearchConfig(new SortConfig(sortPropertyKey, sortOrderChoiceBox.getValue()), queryTextField.getText()));
+    lastSearchConfig = new SearchConfig(new SortConfig(sortPropertyKey, sortOrderChoiceBox.getValue()), queryTextField.getText());
+    searchListener.accept(lastSearchConfig);
+  }
+
+  public SearchConfig getLastSearchConfig() {
+    return lastSearchConfig;
   }
 
   private String getCurrentEntityKey() {
@@ -236,7 +243,8 @@ public class SearchController implements Controller<Pane> {
       }
       condition = currentCondition;
     }
-    return condition.get().query(new RSQLVisitor()) + ";" + lastYearQuery;
+    String queryWithoutLastYear = (String) condition.get().query(new RSQLVisitor());
+    return queryWithoutLastYear + ";" + lastYearQuery;
   }
 
   private String generateOnlyLastYearQuery() {
@@ -244,7 +252,7 @@ public class SearchController implements Controller<Pane> {
     calendar.add(Calendar.YEAR, -1);
     Date date = calendar.getTime();
     SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    return "endTime=ge=" + dateFormater.format(date);
+    return endTimeQueryStart + dateFormater.format(date);
   }
 
   @Override
