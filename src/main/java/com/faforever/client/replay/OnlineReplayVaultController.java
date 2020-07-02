@@ -78,7 +78,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   public Pagination pagination;
 
   private ReplayDetailController replayDetailController;
-  private int currentPage;
+  private ReplaySearchType replaySearchType;
   private Supplier<CompletableFuture<List<Replay>>> currentSupplier;
   private final ObjectProperty<State> state;
   private final Boolean newestReplaysLoaded = false;
@@ -207,7 +207,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   private void onShowUserReplaysEvent(ShowUserReplaysEvent event) {
     enterSearchingState();
     int playerId = event.getPlayerId();
-    currentPage = 1;
     SortConfig sortConfig = new SortConfig("startTime", SortOrder.DESC);
 
     displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, 1, sortConfig));
@@ -240,14 +239,35 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   private void onSearch(SearchConfig searchConfig) {
-    enterSearchingState();
+    replaySearchType = ReplaySearchType.SEARCH;
+    //FIXME pagination setcount gehört hier nicht hin
     Platform.runLater(() -> pagination.setPageCount(0));
-    displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, currentPage++, searchConfig.getSortConfig()));
+    if (pagination.getCurrentPageIndex() != 0) {
+      pagination.setCurrentPageIndex(0);
+    } else {
+      onPageChange(searchConfig, 1);
+    }
   }
 
   private void onPageChange(SearchConfig searchConfig, int page) {
     enterSearchingState();
-    displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, page, searchConfig.getSortConfig()), false);
+    switch (replaySearchType) {
+      case SEARCH:
+        displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, page, searchConfig.getSortConfig()));
+        break;
+      case OWN:
+        displayReplaysFromSupplier(() -> replayService.getOwnReplays(TOP_MORE_ELEMENT_COUNT, page));
+        break;
+      case NEWEST:
+        displayReplaysFromSupplier(() -> replayService.getNewestReplays(TOP_MORE_ELEMENT_COUNT, page));
+        break;
+      case HIGHEST_RATED:
+        displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(TOP_MORE_ELEMENT_COUNT, page));
+        break;
+      default:
+        //TODO log error
+        break;
+    }
   }
 
   private void displaySearchResult(List<Replay> replays) {
@@ -280,13 +300,21 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   public void onMoreNewestButtonClicked() {
-    enterSearchingState();
-    displayReplaysFromSupplier(() -> replayService.getNewestReplays(TOP_MORE_ELEMENT_COUNT, currentPage++));
+    replaySearchType = ReplaySearchType.NEWEST;
+    if (pagination.getCurrentPageIndex() != 0) {
+      pagination.setCurrentPageIndex(0);
+    } else {
+      onPageChange(null, 1);
+    }
   }
 
   public void onMoreHighestRatedButtonClicked() {
-    enterSearchingState();
-    displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(TOP_MORE_ELEMENT_COUNT, currentPage++));
+    replaySearchType = ReplaySearchType.HIGHEST_RATED;
+    if (pagination.getCurrentPageIndex() != 0) {
+      pagination.setCurrentPageIndex(0);
+    } else {
+      onPageChange(null, 1);
+    }
   }
 
   public void onLoadMoreButtonClicked(ActionEvent actionEvent) {
@@ -294,10 +322,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         .thenAccept(replays -> displaySearchResult(replays, true));
   }
 
-  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier, boolean startFromOne) {
-    if (startFromOne) {
-      currentPage = 1;
-    }
+  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier) {
     currentSupplier = mapsSupplier;
     mapsSupplier.get()
         .thenAccept(this::displaySearchResult)
@@ -310,15 +335,18 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         });
   }
 
-  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier) {
-    displayReplaysFromSupplier(mapsSupplier, true);
-  }
-
   public void onMoreOwnButtonClicked() {
-    enterSearchingState();
-    displayReplaysFromSupplier(() -> replayService.getOwnReplays(TOP_MORE_ELEMENT_COUNT, currentPage++));
+    replaySearchType = ReplaySearchType.OWN;
+    if (pagination.getCurrentPageIndex() != 0) {
+      pagination.setCurrentPageIndex(0);
+    } else {
+      onPageChange(null, 1);
+    }
   }
 
+  private enum ReplaySearchType {
+    SEARCH, OWN, NEWEST, HIGHEST_RATED
+  }
   private enum State {
     SEARCHING, RESULT, UNINITIALIZED
   }
