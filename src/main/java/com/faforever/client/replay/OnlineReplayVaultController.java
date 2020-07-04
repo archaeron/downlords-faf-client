@@ -115,7 +115,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     searchController.setOnlyShowLastYearCheckBoxVisible(true, true);
 
     pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
-      enterSearchingState();
       SearchConfig searchConfig = searchController.getLastSearchConfig();
       onPageChange(searchConfig, newValue.intValue() + 1);
     });
@@ -257,10 +256,10 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         break;
       case HIGHEST_RATED:
         displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(TOP_MORE_ELEMENT_COUNT, page));
-        break;/*
+        break;
       case PLAYER:
         displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, page, new SortConfig("startTime", SortOrder.DESC)));
-        break;*/
+        break;
       default:
         //TODO log error
         break;
