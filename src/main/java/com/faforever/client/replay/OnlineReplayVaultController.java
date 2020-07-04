@@ -80,6 +80,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   private ReplayDetailController replayDetailController;
   private ReplaySearchType replaySearchType;
   private Supplier<CompletableFuture<List<Replay>>> currentSupplier;
+  private int playerId;
   private final ObjectProperty<State> state;
   private final Boolean newestReplaysLoaded = false;
 
@@ -114,9 +115,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     searchController.setOnlyShowLastYearCheckBoxVisible(true, true);
 
     pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
-      enterSearchingState();
       SearchConfig searchConfig = searchController.getLastSearchConfig();
-
       onPageChange(searchConfig, newValue.intValue() + 1);
     });
   }
@@ -206,8 +205,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private void onShowUserReplaysEvent(ShowUserReplaysEvent event) {
     enterSearchingState();
-    //FIXME: make this compliant with pagination, if relevant
-    int playerId = event.getPlayerId();
+    replaySearchType = ReplaySearchType.PLAYER;
+    playerId = event.getPlayerId();
     SortConfig sortConfig = new SortConfig("startTime", SortOrder.DESC);
     displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, 1, sortConfig));
   }
@@ -257,6 +256,9 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         break;
       case HIGHEST_RATED:
         displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(TOP_MORE_ELEMENT_COUNT, page));
+        break;
+      case PLAYER:
+        displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, page, new SortConfig("startTime", SortOrder.DESC)));
         break;
       default:
         //TODO log error
@@ -335,7 +337,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   private enum ReplaySearchType {
-    SEARCH, OWN, NEWEST, HIGHEST_RATED
+    SEARCH, OWN, NEWEST, HIGHEST_RATED, PLAYER
   }
 
   private enum State {
