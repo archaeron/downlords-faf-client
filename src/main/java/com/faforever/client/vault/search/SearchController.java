@@ -251,6 +251,7 @@ public class SearchController implements Controller<Pane> {
 
   private String generateOnlyLastYearQuery() {
     OffsetDateTime time = OffsetDateTime.now();
+    time = time.minusYears(1L);
     return END_TIME_QUERY + time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
   }
 
