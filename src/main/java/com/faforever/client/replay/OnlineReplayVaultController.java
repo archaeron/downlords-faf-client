@@ -206,9 +206,9 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private void onShowUserReplaysEvent(ShowUserReplaysEvent event) {
     enterSearchingState();
+    //FIXME: make this compliant with pagination, if relevant
     int playerId = event.getPlayerId();
     SortConfig sortConfig = new SortConfig("startTime", SortOrder.DESC);
-
     displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, 1, sortConfig));
   }
 
@@ -240,13 +240,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private void onSearch(SearchConfig searchConfig) {
     replaySearchType = ReplaySearchType.SEARCH;
-    //FIXME pagination setcount gehört hier nicht hin
-    Platform.runLater(() -> pagination.setPageCount(0));
-    if (pagination.getCurrentPageIndex() != 0) {
-      pagination.setCurrentPageIndex(0);
-    } else {
-      onPageChange(searchConfig, 1);
-    }
+    onFirstPageOpened(searchConfig);
   }
 
   private void onPageChange(SearchConfig searchConfig, int page) {
@@ -267,6 +261,14 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
       default:
         //TODO log error
         break;
+    }
+  }
+
+  private void onFirstPageOpened(SearchConfig searchConfig) {
+    if (pagination.getCurrentPageIndex() != 0) {
+      pagination.setCurrentPageIndex(0);
+    } else {
+      onPageChange(searchConfig, 1);
     }
   }
 
@@ -301,20 +303,12 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   public void onMoreNewestButtonClicked() {
     replaySearchType = ReplaySearchType.NEWEST;
-    if (pagination.getCurrentPageIndex() != 0) {
-      pagination.setCurrentPageIndex(0);
-    } else {
-      onPageChange(null, 1);
-    }
+    onFirstPageOpened(null);
   }
 
   public void onMoreHighestRatedButtonClicked() {
     replaySearchType = ReplaySearchType.HIGHEST_RATED;
-    if (pagination.getCurrentPageIndex() != 0) {
-      pagination.setCurrentPageIndex(0);
-    } else {
-      onPageChange(null, 1);
-    }
+    onFirstPageOpened(null);
   }
 
   public void onLoadMoreButtonClicked(ActionEvent actionEvent) {
@@ -337,16 +331,13 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   public void onMoreOwnButtonClicked() {
     replaySearchType = ReplaySearchType.OWN;
-    if (pagination.getCurrentPageIndex() != 0) {
-      pagination.setCurrentPageIndex(0);
-    } else {
-      onPageChange(null, 1);
-    }
+    onFirstPageOpened(null);
   }
 
   private enum ReplaySearchType {
     SEARCH, OWN, NEWEST, HIGHEST_RATED
   }
+
   private enum State {
     SEARCHING, RESULT, UNINITIALIZED
   }
