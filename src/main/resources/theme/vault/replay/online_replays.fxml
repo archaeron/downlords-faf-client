@@ -12,7 +12,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
 <BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.faforever.client.replay.OnlineReplayVaultController">
    <center>
       <StackPane fx:id="replayVaultRoot">
@@ -75,6 +74,38 @@
       </StackPane>
    </center>
    <bottom>
-      <Pagination fx:id="pagination" pickOnBounds="false" prefWidth="316.0" BorderPane.alignment="CENTER" />
+      <HBox alignment="CENTER" BorderPane.alignment="CENTER">
+         <children>
+            <VBox>
+               <children>
+                  <JFXButton fx:id="firstPageButton">
+                     <graphic>
+                         <Label prefHeight="30.0" styleClass="icon" text="" />
+                     </graphic>
+                  </JFXButton>
+               </children>
+               <HBox.margin>
+                  <Insets top="5.0" />
+               </HBox.margin>
+            </VBox>
+            <VBox>
+               <children>
+                  <Pagination fx:id="pagination" pickOnBounds="false" />
+               </children>
+            </VBox>
+            <VBox>
+               <children>
+                  <JFXButton fx:id="lastPageButton">
+                     <graphic>
+                        <Label prefHeight="30.0" styleClass="icon" text="" />
+                     </graphic>
+                  </JFXButton>
+               </children>
+               <HBox.margin>
+                  <Insets top="5.0" />
+               </HBox.margin>
+            </VBox>
+         </children>
+      </HBox>
    </bottom>
 </BorderPane>

@@ -19,6 +19,7 @@ import com.faforever.client.vault.search.SearchController;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
 import com.faforever.client.vault.search.SearchController.SortOrder;
+import com.jfoenix.controls.JFXButton;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -76,6 +77,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   public SearchController searchController;
   public VBox ownReplaysPane;
   public Pagination pagination;
+  public Button lastPageButton;
+  public Button firstPageButton;
 
   private ReplayDetailController replayDetailController;
   private ReplaySearchType replaySearchType;
@@ -104,6 +107,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     searchResultGroup.managedProperty().bind(searchResultGroup.visibleProperty());
     backButton.managedProperty().bind(backButton.visibleProperty());
     pagination.managedProperty().bind(pagination.visibleProperty());
+    firstPageButton.managedProperty().bind(firstPageButton.visibleProperty());
+    lastPageButton.managedProperty().bind(lastPageButton.visibleProperty());
 
     searchController.setRootType(Game.class);
     searchController.setSearchListener(this::onSearch);
@@ -127,6 +132,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     backButton.setVisible(true);
     populateReplays(replays, searchResultPane, append);
     pagination.setVisible(true);
+    firstPageButton.setVisible(true);
+    lastPageButton.setVisible(true);
   }
 
   private void populateReplays(List<Replay> replays, Pane pane, boolean append) {
@@ -224,6 +231,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     loadingPane.setVisible(true);
     backButton.setVisible(false);
     pagination.setVisible(false);
+    firstPageButton.setVisible(false);
+    lastPageButton.setVisible(false);
   }
 
   private void enterResultState() {
@@ -234,6 +243,8 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     loadingPane.setVisible(false);
     backButton.setVisible(false);
     pagination.setVisible(false);
+    firstPageButton.setVisible(false);
+    lastPageButton.setVisible(false);
   }
 
   private void onSearch(SearchConfig searchConfig) {
