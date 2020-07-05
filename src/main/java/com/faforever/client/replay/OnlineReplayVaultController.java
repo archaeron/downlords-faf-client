@@ -260,9 +260,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
       case PLAYER:
         displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, page, new SortConfig("startTime", SortOrder.DESC)));
         break;
-      default:
-        //TODO log error
-        break;
     }
   }
 
