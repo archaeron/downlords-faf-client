@@ -30,7 +30,6 @@ import com.faforever.client.mod.FeaturedMod;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
 import com.faforever.commons.io.ByteCountListener;
-import com.github.jasminb.jsonapi.JSONAPIDocument;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -191,11 +190,6 @@ public class MockFafApiAccessor implements FafApiAccessor {
   @Override
   public List<Game> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
     return Collections.emptyList();
-  }
-
-  @Override
-  public JSONAPIDocument<List<Game>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig) {
-    return null;
   }
 
   @Override

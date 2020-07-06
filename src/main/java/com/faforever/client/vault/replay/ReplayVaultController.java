@@ -21,7 +21,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableMap;
 import javafx.scene.Node;
-import javafx.scene.control.Pagination;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -74,14 +73,11 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   public TableColumn<Replay, Duration> durationColumn;
   public TableColumn<Replay, String> gameTypeColumn;
   public TableColumn<Replay, MapBean> mapColumn;
-  public Pagination pagination;
 
   private Boolean isDisplayingForFirstTime = true;
 
-  @Override
+  @SuppressWarnings("unchecked")
   public void initialize() {
-    pagination.managedProperty().bind(pagination.visibleProperty());
-    pagination.setVisible(false);
 
     replayTableView.setRowFactory(param -> replayRowFactory());
     replayTableView.getSortOrder().setAll(Collections.singletonList(timeColumn));
@@ -118,7 +114,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   }
 
   protected void loadLocalReplaysInBackground() {
-    replayService.startLoadingAndWatchingLocalReplays(pagination);
+    replayService.startLoadingAndWatchingLocalReplays();
   }
 
   @NotNull
@@ -157,7 +153,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Temporal> timeCellFactory(TableColumn<Replay, Temporal> column) {
     TextFieldTableCell<Replay, Temporal> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<>() {
+    cell.setConverter(new StringConverter<Temporal>() {
       @Override
       public String toString(Temporal object) {
         return timeService.lessThanOneDayAgo(object);
@@ -175,7 +171,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
     MapPreviewTableCellController controller = uiService.loadFxml("theme/vault/map/map_preview_table_cell.fxml");
     final ImageView imageView = controller.getRoot();
 
-    TableCell<Replay, MapBean> cell = new TableCell<>() {
+    TableCell<Replay, MapBean> cell = new TableCell<Replay, MapBean>() {
 
       @Override
       protected void updateItem(MapBean map, boolean empty) {
@@ -201,7 +197,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Number> idCellFactory(TableColumn<Replay, Number> column) {
     TextFieldTableCell<Replay, Number> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<>() {
+    cell.setConverter(new StringConverter<Number>() {
       @Override
       public String toString(Number object) {
         if (object.intValue() == 0) {
@@ -220,7 +216,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Duration> durationCellFactory(TableColumn<Replay, Duration> column) {
     TextFieldTableCell<Replay, Duration> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<>() {
+    cell.setConverter(new StringConverter<Duration>() {
       @Override
       public String toString(Duration object) {
         if (object == null) {
@@ -260,8 +256,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
     replayTableView.setVisible(true);
     loadingPane.setVisible(false);
   }
-
-  @Override
+  
   public Node getRoot() {
     return replayVaultRoot;
   }

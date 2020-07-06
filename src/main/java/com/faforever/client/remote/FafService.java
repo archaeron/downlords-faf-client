@@ -75,6 +75,7 @@ public class FafService {
     fafServerAccessor.addOnMessageListener(type, listener);
   }
 
+  @SuppressWarnings("unchecked")
   public <T extends ServerMessage> void removeOnMessageListener(Class<T> type, Consumer<T> listener) {
     fafServerAccessor.removeOnMessageListener(type, listener);
   }
@@ -296,7 +297,7 @@ public class FafService {
 
   @Async
   public CompletableFuture<List<Replay>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
-    return CompletableFuture.completedFuture(fafApiAccessor.findReplaysByQueryWithMeta(query, maxResults, page, sortConfig).get()
+    return CompletableFuture.completedFuture(fafApiAccessor.findReplaysByQuery(query, maxResults, page, sortConfig)
         .parallelStream()
         .map(Replay::fromDto)
         .collect(toList()));

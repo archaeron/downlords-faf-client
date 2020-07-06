@@ -130,6 +130,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<PlayerAchievement> getPlayerAchievements(int playerId) {
     return getAll("/data/playerAchievement", ImmutableMap.of(
         "filter", rsql(qBuilder().intNum("player.id").eq(playerId))
@@ -137,6 +138,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<PlayerEvent> getPlayerEvents(int playerId) {
     return getAll("/data/playerEvent", ImmutableMap.of(
         "filter", rsql(qBuilder().intNum("player.id").eq(playerId))
@@ -144,6 +146,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   @Cacheable(CacheNames.ACHIEVEMENTS)
   public List<AchievementDefinition> getAchievementDefinitions() {
     return getAll("/data/achievement", ImmutableMap.of(
@@ -173,6 +176,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   @Override
   @Cacheable(CacheNames.GLOBAL_LEADERBOARD)
   @SneakyThrows
+  @SuppressWarnings("unchecked")
   public List<GlobalLeaderboardEntry> getGlobalLeaderboard() {
     // This is not an ordinary JSON-API route and thus doesn't support paging, that's why it's called manually
     authorizedLatch.await();
@@ -188,6 +192,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   @Override
   @Cacheable(CacheNames.LADDER_1V1_LEADERBOARD)
   @SneakyThrows
+  @SuppressWarnings("unchecked")
   public List<Ladder1v1LeaderboardEntry> getLadder1v1Leaderboard() {
     // This is not an ordinary JSON-API route and thus doesn't support paging, that's why it doesn't use getAll()
     authorizedLatch.await();
@@ -330,15 +335,6 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   @Override
   public List<Game> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
     return getPage("/data/game", maxResults, page, ImmutableMap.of(
-        "filter", "(" + query + ");endTime=isnull=false",
-        "include", REPLAY_INCLUDES,
-        "sort", sortConfig.toQuery()
-    ));
-  }
-
-  @Override
-  public JSONAPIDocument<List<Game>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig) {
-    return getPageWithMeta("/data/game", maxResults, page, ImmutableMap.of(
         "filter", "(" + query + ");endTime=isnull=false",
         "include", REPLAY_INCLUDES,
         "sort", sortConfig.toQuery()
@@ -491,7 +487,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   @Override
   @Cacheable(CacheNames.COOP_MAPS)
   public List<CoopMission> getCoopMissions() {
-    return getAll("/data/coopMission");
+    return this.getAll("/data/coopMission");
   }
 
   @Override
@@ -512,6 +508,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
 
   @Override
   @SneakyThrows
+  @SuppressWarnings("unchecked")
   public List<Tournament> getAllTournaments() {
     return Arrays.asList(restOperations.getForObject(TOURNAMENT_LIST_ENDPOINT, Tournament[].class));
   }
@@ -574,11 +571,13 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
     restOperations.delete(endpointPath);
   }
 
+  @SuppressWarnings("unchecked")
   @SneakyThrows
   private <T> T getOne(String endpointPath, Class<T> type) {
     return restOperations.getForObject(endpointPath, type, Collections.emptyMap());
   }
 
+  @SuppressWarnings("unchecked")
   @SneakyThrows
   private <T> T getOne(String endpointPath, Class<T> type, java.util.Map<String, Serializable> params) {
     java.util.Map<String, List<String>> multiValues = params.entrySet().stream()
@@ -627,6 +626,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
     return getPageWithMeta(endpointPath, pageSize, page, CollectionUtils.toMultiValueMap(multiValues));
   }
 
+  @SuppressWarnings("unchecked")
   @SneakyThrows
   private <T> List<T> getPage(String endpointPath, int pageSize, int page, MultiValueMap<String, String> params) {
     UriComponents uriComponents = UriComponentsBuilder.fromPath(endpointPath)
@@ -639,6 +639,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
     return restOperations.getForObject(uriComponents.toUriString(), List.class);
   }
 
+  @SuppressWarnings("unchecked")
   @SneakyThrows
   private <T> JSONAPIDocument<List<T>> getPageWithMeta(String endpointPath, int pageSize, int page, MultiValueMap<String, String> params) {
     UriComponents uriComponents = UriComponentsBuilder.fromPath(endpointPath)
