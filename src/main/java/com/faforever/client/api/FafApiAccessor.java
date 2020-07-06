@@ -27,6 +27,7 @@ import com.faforever.client.mod.FeaturedMod;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
 import com.faforever.commons.io.ByteCountListener;
+import com.github.jasminb.jsonapi.JSONAPIDocument;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,7 +43,6 @@ public interface FafApiAccessor {
 
   List<PlayerAchievement> getPlayerAchievements(int playerId);
 
-  @SuppressWarnings("unchecked")
   List<PlayerEvent> getPlayerEvents(int playerId);
 
   List<AchievementDefinition> getAchievementDefinitions();
@@ -92,6 +92,8 @@ public interface FafApiAccessor {
   List<Game> getHighestRatedReplays(int count, int page);
 
   List<Game> findReplaysByQuery(String condition, int maxResults, int page, SortConfig sortConfig);
+
+  JSONAPIDocument<List<Game>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig);
 
   Optional<MapVersion> findMapByFolderName(String folderName);
 
