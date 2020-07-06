@@ -121,6 +121,9 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
       SearchConfig searchConfig = searchController.getLastSearchConfig();
       onPageChange(searchConfig, newValue.intValue() + 1, false);
     });
+
+    firstPageButton.setOnAction(event -> pagination.setCurrentPageIndex(0));
+    lastPageButton.setOnAction(event -> pagination.setCurrentPageIndex(pagination.getPageCount() - 1));
   }
 
   private void displaySearchResult(List<Replay> replays, boolean append) {
