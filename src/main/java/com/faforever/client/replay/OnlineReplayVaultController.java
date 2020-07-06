@@ -20,7 +20,6 @@ import com.faforever.client.vault.search.SearchController;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
 import com.faforever.client.vault.search.SearchController.SortOrder;
-import com.jfoenix.controls.JFXButton;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -29,7 +28,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Pagination;
@@ -55,8 +53,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   private static final int TOP_ELEMENT_COUNT = 10;
-  private static final int TOP_MORE_ELEMENT_COUNT = 100;
-  private static final int MAX_SEARCH_RESULTS = 100;
+  private static final int PAGE_SIZE = 100;
 
   private final ReplayService replayService;
   private final UiService uiService;
@@ -122,7 +119,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
     pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
       SearchConfig searchConfig = searchController.getLastSearchConfig();
-      onPageChange(searchConfig, newValue.intValue() + 1);
+      onPageChange(searchConfig, newValue.intValue() + 1, false);
     });
   }
 
@@ -216,7 +213,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     replaySearchType = ReplaySearchType.PLAYER;
     playerId = event.getPlayerId();
     SortConfig sortConfig = new SortConfig("startTime", SortOrder.DESC);
-    displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, 1, sortConfig));
+    displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, PAGE_SIZE, 1, sortConfig), true);
   }
 
 
@@ -254,23 +251,23 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     onFirstPageOpened(searchConfig);
   }
 
-  private void onPageChange(SearchConfig searchConfig, int page) {
+  private void onPageChange(SearchConfig searchConfig, int page, boolean firstLoad) {
     enterSearchingState();
     switch (replaySearchType) {
       case SEARCH:
-        displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), MAX_SEARCH_RESULTS, page, searchConfig.getSortConfig()));
+        displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), PAGE_SIZE, page, searchConfig.getSortConfig()), firstLoad);
         break;
       case OWN:
-        displayReplaysFromSupplier(() -> replayService.getOwnReplays(TOP_MORE_ELEMENT_COUNT, page));
+        displayReplaysFromSupplier(() -> replayService.getOwnReplays(PAGE_SIZE, page), firstLoad);
         break;
       case NEWEST:
-        displayReplaysFromSupplier(() -> replayService.getNewestReplays(TOP_MORE_ELEMENT_COUNT, page));
+        displayReplaysFromSupplier(() -> replayService.getNewestReplays(PAGE_SIZE, page), firstLoad);
         break;
       case HIGHEST_RATED:
-        displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(TOP_MORE_ELEMENT_COUNT, page));
+        displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(PAGE_SIZE, page), firstLoad);
         break;
       case PLAYER:
-        displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, MAX_SEARCH_RESULTS, page, new SortConfig("startTime", SortOrder.DESC)));
+        displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, PAGE_SIZE, page, new SortConfig("startTime", SortOrder.DESC)), firstLoad);
         break;
     }
   }
@@ -279,7 +276,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     if (pagination.getCurrentPageIndex() != 0) {
       pagination.setCurrentPageIndex(0);
     } else {
-      onPageChange(searchConfig, 1);
+      onPageChange(searchConfig, 1, true);
     }
   }
 
@@ -322,10 +319,15 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     onFirstPageOpened(null);
   }
 
-  private void displayReplaysFromSupplier(Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> mapsSupplier) {
+  private void displayReplaysFromSupplier(Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> mapsSupplier, boolean firstLoad) {
     currentSupplier = mapsSupplier;
     mapsSupplier.get()
-        .thenAccept(tuple -> displaySearchResult(tuple.getFirst()))
+        .thenAccept(tuple -> {
+          displaySearchResult(tuple.getFirst());
+          if (firstLoad) {
+            Platform.runLater(() -> pagination.setPageCount((Integer) ((Map<String, ?>) tuple.getSecond().get("page")).get("limit")));
+          }
+        })
         .exceptionally(throwable -> {
           notificationService.addNotification(new ImmediateErrorNotification(
               i18n.get("errorTitle"), i18n.get("vault.replays.searchError"), throwable, i18n, reportingService
