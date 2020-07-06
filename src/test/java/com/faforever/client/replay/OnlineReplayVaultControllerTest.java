@@ -170,27 +170,6 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
   }
 
   @Test
-  public void testMoreButton() {
-    Consumer<SearchConfig> searchListener = searchListenerCaptor.getValue();
-    List<Replay> list = new ArrayList<>();
-    for (int i = 0; i != 100; i++) {
-      list.add(new Replay());
-    }
-    CompletableFuture<List<Replay>> completableFuture = new CompletableFuture<>();
-    completableFuture.complete(list);
-    when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
-
-    searchListener.accept(standardSearchConfig);
-
-    instance.onLoadMoreButtonClicked(new ActionEvent());
-
-    WaitForAsyncUtils.waitForFxEvents();
-    verify(replayService).findByQuery("query", MAX_RESULTS, 1, sortOrder);
-    verify(replayService).findByQuery("query", MAX_RESULTS, 2, sortOrder);
-    assertThat(instance.moreButton.isVisible(), is(true));
-  }
-
-  @Test
   public void showReplayButReplayNotPresent() {
     when(replayService.findById(anyInt())).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
     instance.display(new ShowReplayEvent(123));

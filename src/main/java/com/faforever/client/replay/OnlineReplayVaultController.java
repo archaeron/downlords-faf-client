@@ -15,6 +15,7 @@ import com.faforever.client.preferences.PreferencesService;
 import com.faforever.client.query.SearchablePropertyMappings;
 import com.faforever.client.reporting.ReportingService;
 import com.faforever.client.theme.UiService;
+import com.faforever.client.util.Tuple;
 import com.faforever.client.vault.search.SearchController;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -82,7 +84,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private ReplayDetailController replayDetailController;
   private ReplaySearchType replaySearchType;
-  private Supplier<CompletableFuture<List<Replay>>> currentSupplier;
+  private Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> currentSupplier;
   private int playerId;
   private final ObjectProperty<State> state;
   private final Boolean newestReplaysLoaded = false;
@@ -300,9 +302,9 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   private void loadPreselectedReplays() {
     enterSearchingState();
     replayService.getNewestReplays(TOP_ELEMENT_COUNT, 1)
-        .thenAccept(replays -> populateReplays(replays, newestPane))
-        .thenCompose(aVoid -> replayService.getHighestRatedReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays, highestRatedPane)))
-        .thenCompose(aVoid -> replayService.getOwnReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays, ownReplaysPane)))
+        .thenAccept(replays -> populateReplays(replays.getFirst(), newestPane))
+        .thenCompose(aVoid -> replayService.getHighestRatedReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), highestRatedPane)))
+        .thenCompose(aVoid -> replayService.getOwnReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), ownReplaysPane)))
         .thenRun(this::enterResultState)
         .exceptionally(throwable -> {
           logger.warn("Could not populate replays", throwable);
@@ -320,15 +322,10 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     onFirstPageOpened(null);
   }
 
-  public void onLoadMoreButtonClicked(ActionEvent actionEvent) {
-    currentSupplier.get()
-        .thenAccept(replays -> displaySearchResult(replays, true));
-  }
-
-  private void displayReplaysFromSupplier(Supplier<CompletableFuture<List<Replay>>> mapsSupplier) {
+  private void displayReplaysFromSupplier(Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> mapsSupplier) {
     currentSupplier = mapsSupplier;
     mapsSupplier.get()
-        .thenAccept(this::displaySearchResult)
+        .thenAccept(tuple -> displaySearchResult(tuple.getFirst()))
         .exceptionally(throwable -> {
           notificationService.addNotification(new ImmediateErrorNotification(
               i18n.get("errorTitle"), i18n.get("vault.replays.searchError"), throwable, i18n, reportingService
