@@ -81,7 +81,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private ReplayDetailController replayDetailController;
   private ReplaySearchType replaySearchType;
-  private Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> currentSupplier;
   private int playerId;
   private final ObjectProperty<State> state;
   private final Boolean newestReplaysLoaded = false;
@@ -326,7 +325,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   private void displayReplaysFromSupplier(Supplier<CompletableFuture<Tuple<List<Replay>, Map<String, ?>>>> mapsSupplier, boolean firstLoad) {
-    currentSupplier = mapsSupplier;
     mapsSupplier.get()
         .thenAccept(tuple -> {
           displaySearchResult(tuple.getFirst());
