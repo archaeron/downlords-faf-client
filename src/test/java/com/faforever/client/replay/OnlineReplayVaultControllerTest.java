@@ -16,9 +16,6 @@ import com.faforever.client.util.Tuple;
 import com.faforever.client.vault.search.SearchController;
 import com.faforever.client.vault.search.SearchController.SearchConfig;
 import com.faforever.client.vault.search.SearchController.SortConfig;
-import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Pagination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import org.junit.Before;
@@ -44,7 +41,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -243,7 +239,6 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
      simulate last page button press
     * check if on last  page
     * */
-
     HashMap<String, Integer> innerHashMap = new HashMap<>();
     innerHashMap.put("totalPages", 4);
     HashMap<String, HashMap<String, Integer>> hashMap = new HashMap<>();
@@ -266,6 +261,7 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
     WaitForAsyncUtils.waitForFxEvents();
     verify(replayService).findByQuery("query", MAX_RESULTS, 1, sortOrder);
     verify(replayService).findByQuery("query", MAX_RESULTS, 4, sortOrder);
+    verify(replayService).findByQuery("query", MAX_RESULTS, Integer.MAX_VALUE, sortOrder);
     assertThat(instance.pagination.getCurrentPageIndex(), is(3));
   }
 
