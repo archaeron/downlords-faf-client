@@ -235,10 +235,6 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
 
   @Test
   public void testLastPageButton() {
-    /* load replays
-     simulate last page button press
-    * check if on last  page
-    * */
     HashMap<String, Integer> innerHashMap = new HashMap<>();
     innerHashMap.put("totalPages", 4);
     HashMap<String, HashMap<String, Integer>> hashMap = new HashMap<>();
@@ -246,22 +242,25 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
 
     Consumer<SearchConfig> searchListener = searchListenerCaptor.getValue();
     List<Replay> list = new ArrayList<>();
-    for (int i = 0; i != 400; i++) {
+    for (int i = 0; i != 100; i++) {
       list.add(new Replay());
     }
 
     CompletableFuture<Tuple<List<Replay>, Map<String, ?>>> completableFuture = new CompletableFuture<>();
     completableFuture.complete(new Tuple<>(list, hashMap));
     when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
+    when(instance.searchController.getLastSearchConfig()).thenReturn(standardSearchConfig);
 
     searchListener.accept(standardSearchConfig);
+
+    WaitForAsyncUtils.waitForFxEvents();
 
     instance.lastPageButton.fire();
 
     WaitForAsyncUtils.waitForFxEvents();
+
     verify(replayService).findByQuery("query", MAX_RESULTS, 1, sortOrder);
     verify(replayService).findByQuery("query", MAX_RESULTS, 4, sortOrder);
-    verify(replayService).findByQuery("query", MAX_RESULTS, Integer.MAX_VALUE, sortOrder);
     assertThat(instance.pagination.getCurrentPageIndex(), is(3));
   }
 
