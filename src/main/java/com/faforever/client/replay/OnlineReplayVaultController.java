@@ -331,7 +331,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
         .thenAccept(tuple -> {
           displaySearchResult(tuple.getFirst());
           if (firstLoad) {
-            Platform.runLater(() -> pagination.setPageCount((Integer) ((Map<String, ?>) tuple.getSecond().get("page")).get("limit")));
+            Platform.runLater(() -> pagination.setPageCount((Integer) ((Map<String, ?>) tuple.getSecond().get("page")).get("totalPages")));
           }
         })
         .exceptionally(throwable -> {
