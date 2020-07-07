@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -187,50 +188,57 @@ public class OnlineReplayVaultControllerTest extends AbstractPlainJavaFxTest {
 
   @Test
   public void testPagination() {
+    HashMap<String, Integer> innerHashMap = new HashMap<>();
+    innerHashMap.put("totalPages", 4);
+    HashMap<String, HashMap<String, Integer>> hashMap = new HashMap<>();
+    hashMap.put("page", innerHashMap);
+
     Consumer<SearchConfig> searchListener = searchListenerCaptor.getValue();
-    List<Replay> list = new ArrayList<>();
-    for (int i = 0; i != 100; i++) {
-      list.add(new Replay());
-    }
-    CompletableFuture<List<Replay>> completableFuture = new CompletableFuture<>();
-    completableFuture.complete(list);
-    //when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
+    CompletableFuture<Tuple<List<Replay>, Map<String, ?>>> completableFuture = new CompletableFuture<>();
+    completableFuture.complete(new Tuple<>(Collections.emptyList(), hashMap));
+
+    when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
+    when(instance.searchController.getLastSearchConfig()).thenReturn(standardSearchConfig);
 
     searchListener.accept(standardSearchConfig);
 
-    // instance.onLoadMoreButtonClicked(new ActionEvent());
+    WaitForAsyncUtils.waitForFxEvents();
+    instance.pagination.setCurrentPageIndex(1);
 
     WaitForAsyncUtils.waitForFxEvents();
-    verify(replayService).findByQuery("query", MAX_RESULTS, 1, sortOrder);
-    verify(replayService).findByQuery("query", MAX_RESULTS, 2, sortOrder);
-    // assertThat(instance.moreButton.isVisible(), is(true));
+    assertThat(instance.pagination.getCurrentPageIndex(), is(1));
   }
 
   @Test
   public void testFirstPageButton() {
-    /* load replays
-    navigate to page != 1
-     simulate first page button press
-    * check if on first page
+    HashMap<String, Integer> innerHashMap = new HashMap<>();
+    innerHashMap.put("totalPages", 4);
+    HashMap<String, HashMap<String, Integer>> hashMap = new HashMap<>();
+    hashMap.put("page", innerHashMap);
 
-    * */
     Consumer<SearchConfig> searchListener = searchListenerCaptor.getValue();
     List<Replay> list = new ArrayList<>();
     for (int i = 0; i != 100; i++) {
       list.add(new Replay());
     }
-    CompletableFuture<List<Replay>> completableFuture = new CompletableFuture<>();
-    completableFuture.complete(list);
-    //when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
+
+    CompletableFuture<Tuple<List<Replay>, Map<String, ?>>> completableFuture = new CompletableFuture<>();
+    completableFuture.complete(new Tuple<>(list, hashMap));
+    when(replayService.findByQuery(eq("query"), eq(MAX_RESULTS), anyInt(), eq(sortOrder))).thenReturn(completableFuture);
+    when(instance.searchController.getLastSearchConfig()).thenReturn(standardSearchConfig);
 
     searchListener.accept(standardSearchConfig);
 
-    //instance.onLoadMoreButtonClicked(new ActionEvent());
+    WaitForAsyncUtils.waitForFxEvents();
+
+    instance.pagination.setCurrentPageIndex(3);
+    instance.firstPageButton.fire();
 
     WaitForAsyncUtils.waitForFxEvents();
-    verify(replayService).findByQuery("query", MAX_RESULTS, 1, sortOrder);
-    verify(replayService).findByQuery("query", MAX_RESULTS, 2, sortOrder);
-    // assertThat(instance.moreButton.isVisible(), is(true));
+
+    verify(replayService, times(2)).findByQuery("query", MAX_RESULTS, 1, sortOrder);
+    verify(replayService).findByQuery("query", MAX_RESULTS, 4, sortOrder);
+    assertThat(instance.pagination.getCurrentPageIndex(), is(0));
   }
 
   @Test
