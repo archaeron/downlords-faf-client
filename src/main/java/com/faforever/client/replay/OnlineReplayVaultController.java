@@ -291,7 +291,11 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   public void onRefreshButtonClicked() {
-    onPageChange(searchController.getLastSearchConfig(), pagination.currentPageIndexProperty().getValue()+1, false);
+    if (pagination.isVisible()) {
+      onPageChange(searchController.getLastSearchConfig(), pagination.currentPageIndexProperty().getValue() + 1, false);
+    } else {
+      loadPreselectedReplays();
+    }
   }
 
   private void loadPreselectedReplays() {
