@@ -4,7 +4,6 @@ import com.faforever.client.chat.CountryFlagService;
 import com.faforever.client.fx.Controller;
 import com.faforever.client.i18n.I18n;
 import com.google.common.base.Strings;
-import com.jfoenix.controls.JFXRippler;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -30,7 +29,6 @@ public class LanguageItemController implements Controller<Node> {
   public Label checkedLabel;
   private Consumer<Locale> listener;
   private Locale locale;
-  private JFXRippler jfxRippler;
 
   public LanguageItemController(I18n i18n, CountryFlagService countryFlagService) {
     this.i18n = i18n;
@@ -43,12 +41,11 @@ public class LanguageItemController implements Controller<Node> {
 
     localeImageView.managedProperty().bind(localeImageView.visibleProperty());
     localeImageView.setVisible(false);
-    jfxRippler = new JFXRippler(languageItemRoot);
   }
 
   @Override
   public Node getRoot() {
-    return jfxRippler;
+    return languageItemRoot;
   }
 
   public void setLocale(Locale locale) {

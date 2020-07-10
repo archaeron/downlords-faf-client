@@ -48,10 +48,8 @@ public class MapCardController implements Controller<Node> {
   private Consumer<MapBean> onOpenDetailListener;
   private ListChangeListener<MapBean> installedMapsChangeListener;
   private InvalidationListener reviewsChangedListener = observable -> populateReviews();
-  private JFXRippler jfxRippler;
 
   public void initialize() {
-    jfxRippler = new JFXRippler(mapTileRoot);
     installedMapsChangeListener = change -> {
       while (change.next()) {
         for (MapBean mapBean : change.getAddedSubList()) {
@@ -108,7 +106,7 @@ public class MapCardController implements Controller<Node> {
   }
 
   public Node getRoot() {
-    return jfxRippler;
+    return mapTileRoot;
   }
 
   public void setOnOpenDetailListener(Consumer<MapBean> onOpenDetailListener) {

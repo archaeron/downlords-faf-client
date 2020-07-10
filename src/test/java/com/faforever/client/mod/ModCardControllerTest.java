@@ -6,9 +6,9 @@ import com.faforever.client.test.AbstractPlainJavaFxTest;
 import com.faforever.client.util.TimeService;
 import com.faforever.client.vault.review.StarController;
 import com.faforever.client.vault.review.StarsController;
-import com.jfoenix.controls.JFXRippler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -98,9 +98,9 @@ public class ModCardControllerTest extends AbstractPlainJavaFxTest {
 
   @Test
   public void testGetRoot() throws Exception {
-    assertThat(instance.getRoot(), is(instanceOf(JFXRippler.class)));
+    assertThat(instance.getRoot(), is(instanceOf(Node.class)));
     assertThat(instance.getRoot().getParent(), is(nullValue()));
-    assertThat(((JFXRippler) instance.getRoot()).getControl(), is(instance.modTileRoot));
+    assertThat(instance.getRoot(), is(instance.modTileRoot));
   }
 
   @Test
