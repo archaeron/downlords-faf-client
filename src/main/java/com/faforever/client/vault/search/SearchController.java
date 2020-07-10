@@ -66,6 +66,7 @@ public class SearchController implements Controller<Pane> {
    * Type of the searchable entity.
    */
   private Class<?> rootType;
+  private SearchConfig lastSearchConfig;
 
   public SearchController(UiService uiService, I18n i18n, PreferencesService preferencesService) {
     this.uiService = uiService;
@@ -74,6 +75,7 @@ public class SearchController implements Controller<Pane> {
     queryNodes = new ArrayList<>();
   }
 
+  @Override
   public void initialize() {
     queryTextField.managedProperty().bind(queryTextField.visibleProperty());
     queryTextField.visibleProperty().bind(displayQueryCheckBox.selectedProperty());
@@ -94,7 +96,7 @@ public class SearchController implements Controller<Pane> {
   }
 
   private void initSorting() {
-    sortPropertyComboBox.setConverter(new StringConverter<Property>() {
+    sortPropertyComboBox.setConverter(new StringConverter<>() {
       @Override
       public String toString(Property property) {
         return i18n.get(property.getI18nKey());
@@ -105,7 +107,7 @@ public class SearchController implements Controller<Pane> {
         throw new UnsupportedOperationException("Not supported");
       }
     });
-    sortOrderChoiceBox.setConverter(new StringConverter<SortOrder>() {
+    sortOrderChoiceBox.setConverter(new StringConverter<>() {
       @Override
       public String toString(SortOrder order) {
         return i18n.get(order.getI18nKey());
@@ -167,7 +169,12 @@ public class SearchController implements Controller<Pane> {
 
   public void onSearchButtonClicked() {
     String sortPropertyKey = getCurrentEntityKey();
-    searchListener.accept(new SearchConfig(new SortConfig(sortPropertyKey, sortOrderChoiceBox.getValue()), queryTextField.getText()));
+    lastSearchConfig = new SearchConfig(new SortConfig(sortPropertyKey, sortOrderChoiceBox.getValue()), queryTextField.getText());
+    searchListener.accept(lastSearchConfig);
+  }
+
+  public SearchConfig getLastSearchConfig() {
+    return lastSearchConfig;
   }
 
   private String getCurrentEntityKey() {
@@ -211,7 +218,6 @@ public class SearchController implements Controller<Pane> {
    */
   private String buildQuery(SpecificationController initialSpecification, List<LogicalNodeController> queryNodes) {
     QBuilder qBuilder = new QBuilder();
-
     Optional<Condition> condition = initialSpecification.appendTo(qBuilder);
     if (!condition.isPresent()) {
       return "";
