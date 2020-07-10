@@ -180,18 +180,17 @@ public class MockFafApiAccessor implements FafApiAccessor {
 
   @Override
   public Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplays(int count, int page) {
-    //FIXME Is this the correct way to change the three mock methods from list to tuple<list, map>, to return empty list and null?
-    return new Tuple(Collections.emptyList(), null);
+    return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 
   @Override
   public Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplays(int count, int page) {
-    return new Tuple(Collections.emptyList(), null);
+    return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 
   @Override
   public Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
-    return new Tuple(Collections.emptyList(), null);
+    return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 
   @Override

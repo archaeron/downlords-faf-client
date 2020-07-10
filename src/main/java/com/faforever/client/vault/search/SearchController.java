@@ -29,7 +29,10 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +59,7 @@ public class SearchController implements Controller<Pane> {
   public ComboBox<Property> sortPropertyComboBox;
   public ComboBox<SortOrder> sortOrderChoiceBox;
   public HBox sortBox;
+  public CheckBox onlyShowLastYearCheckBox;
 
   private List<LogicalNodeController> queryNodes;
   private InvalidationListener queryInvalidationListener;
@@ -82,6 +86,9 @@ public class SearchController implements Controller<Pane> {
     queryTextField.managedProperty().bind(queryTextField.visibleProperty());
     queryTextField.visibleProperty().bind(displayQueryCheckBox.selectedProperty());
 
+    onlyShowLastYearCheckBox.managedProperty().bind(onlyShowLastYearCheckBox.visibleProperty());
+    onlyShowLastYearCheckBox.setVisible(false);
+
     initialLogicalNodeController.logicalOperatorField.managedProperty()
         .bind(initialLogicalNodeController.logicalOperatorField.visibleProperty());
     initialLogicalNodeController.removeCriteriaButton.managedProperty()
@@ -93,6 +100,7 @@ public class SearchController implements Controller<Pane> {
     initialLogicalNodeController.removeCriteriaButton.setVisible(false);
 
     queryInvalidationListener = observable -> queryTextField.setText(buildQuery(initialLogicalNodeController.specificationController, queryNodes));
+    onlyShowLastYearCheckBox.selectedProperty().addListener(queryInvalidationListener);
     addInvalidationListener(initialLogicalNodeController);
     initSorting();
   }
@@ -220,10 +228,14 @@ public class SearchController implements Controller<Pane> {
    */
   private String buildQuery(SpecificationController initialSpecification, List<LogicalNodeController> queryNodes) {
     QBuilder qBuilder = new QBuilder();
-
     Optional<Condition> condition = initialSpecification.appendTo(qBuilder);
+    String lastYearQuery = "";
+    if (onlyShowLastYearCheckBox.isVisible() && onlyShowLastYearCheckBox.isSelected()) {
+      lastYearQuery = generateOnlyLastYearQuery();
+    }
+
     if (!condition.isPresent()) {
-      return "";
+      return lastYearQuery;
     }
     for (LogicalNodeController queryNode : queryNodes) {
       Optional<Condition> currentCondition = queryNode.appendTo(condition.get());
@@ -232,7 +244,15 @@ public class SearchController implements Controller<Pane> {
       }
       condition = currentCondition;
     }
-    return (String) condition.get().query(new RSQLVisitor());
+    return condition.get().query(new RSQLVisitor()) + ";" + lastYearQuery;
+  }
+
+  private String generateOnlyLastYearQuery() {
+    Calendar calendar = Calendar.getInstance();
+    calendar.add(Calendar.YEAR, -1);
+    Date date = calendar.getTime();
+    SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    return "endTime=ge=" + dateFormater.format(date);
   }
 
   @Override
@@ -251,6 +271,11 @@ public class SearchController implements Controller<Pane> {
 
   public void setSearchButtonDisabledCondition(BooleanBinding inSearchableState) {
     searchButton.disableProperty().bind(queryTextField.textProperty().isEmpty().or(inSearchableState.not()));
+  }
+
+  public void setOnlyShowLastYearCheckBoxVisible(boolean visible, boolean selectedBaseValue) {
+    onlyShowLastYearCheckBox.setVisible(visible);
+    onlyShowLastYearCheckBox.setSelected(selectedBaseValue);
   }
 
   @Getter
