@@ -179,17 +179,17 @@ public class MockFafApiAccessor implements FafApiAccessor {
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplays(int count, int page) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplaysWithMeta(int count, int page) {
     return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplays(int count, int page) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplaysWithMeta(int count, int page) {
     return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig) {
     return new Tuple(Collections.emptyList(), Collections.emptyMap());
   }
 

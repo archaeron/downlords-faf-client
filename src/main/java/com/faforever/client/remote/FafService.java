@@ -261,8 +261,8 @@ public class FafService {
   }
 
   @Async
-  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> getNewestReplays(int topElementCount, int page) {
-    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.getNewestReplays(topElementCount, page);
+  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> getNewestReplaysMeta(int topElementCount, int page) {
+    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.getNewestReplaysWithMeta(topElementCount, page);
     return CompletableFuture.completedFuture(new Tuple<>(tuple.getFirst()
         .parallelStream()
         .map(Replay::fromDto)
@@ -271,8 +271,8 @@ public class FafService {
   }
 
   @Async
-  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> getHighestRatedReplays(int topElementCount, int page) {
-    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.getHighestRatedReplays(topElementCount, page);
+  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> getHighestRatedReplaysWithMeta(int topElementCount, int page) {
+    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.getHighestRatedReplaysWithMeta(topElementCount, page);
     return CompletableFuture.completedFuture(new Tuple<>(tuple.getFirst()
         .parallelStream()
         .map(Replay::fromDto)
@@ -300,8 +300,8 @@ public class FafService {
   }
 
   @Async
-  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
-    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.findReplaysByQuery(query, maxResults, page, sortConfig);
+  public CompletableFuture<Tuple<List<Replay>, java.util.Map<String, ?>>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig) {
+    Tuple<List<Game>, java.util.Map<String, ?>> tuple = fafApiAccessor.findReplaysByQueryWithMeta(query, maxResults, page, sortConfig);
     return CompletableFuture.completedFuture(new Tuple<>(tuple.getFirst()
         .parallelStream()
         .map(Replay::fromDto)

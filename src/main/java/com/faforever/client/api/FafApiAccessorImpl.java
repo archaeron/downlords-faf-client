@@ -308,7 +308,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplays(int count, int page) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplaysWithMeta(int count, int page) {
     JSONAPIDocument<List<Game>> jsonApiDoc = getPageWithMeta("/data/game", count, page, ImmutableMap.of(
         "sort", "-endTime",
         "include", REPLAY_INCLUDES,
@@ -318,7 +318,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplays(int count, int page) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplaysWithMeta(int count, int page) {
     JSONAPIDocument<List<GameReviewsSummary>> pageWithMeta = getPageWithMeta("/data/gameReviewsSummary", count, page, ImmutableMap.of(
         "sort", "-lowerBound",
         // TODO this was done in a rush, check what is actually needed
@@ -332,7 +332,7 @@ public class FafApiAccessorImpl implements FafApiAccessor, InitializingBean {
   }
 
   @Override
-  public Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig) {
+  public Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig) {
     JSONAPIDocument<List<Game>> jsonApiDoc = getPageWithMeta("/data/game", maxResults, page, ImmutableMap.of(
         "filter", "(" + query + ");endTime=isnull=false",
         "include", REPLAY_INCLUDES,

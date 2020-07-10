@@ -217,7 +217,7 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     replaySearchType = ReplaySearchType.PLAYER;
     playerId = event.getPlayerId();
     SortConfig sortConfig = new SortConfig("startTime", SortOrder.DESC);
-    displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, PAGE_SIZE, 1, sortConfig), true);
+    displayReplaysFromSupplier(() -> replayService.getReplaysForPlayerWithMeta(playerId, PAGE_SIZE, 1, sortConfig), true);
   }
 
 
@@ -259,19 +259,19 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
     enterSearchingState();
     switch (replaySearchType) {
       case SEARCH:
-        displayReplaysFromSupplier(() -> replayService.findByQuery(searchConfig.getSearchQuery(), PAGE_SIZE, page, searchConfig.getSortConfig()), firstLoad);
+        displayReplaysFromSupplier(() -> replayService.findByQueryWithMeta(searchConfig.getSearchQuery(), PAGE_SIZE, page, searchConfig.getSortConfig()), firstLoad);
         break;
       case OWN:
-        displayReplaysFromSupplier(() -> replayService.getOwnReplays(PAGE_SIZE, page), firstLoad);
+        displayReplaysFromSupplier(() -> replayService.getOwnReplaysWithMeta(PAGE_SIZE, page), firstLoad);
         break;
       case NEWEST:
-        displayReplaysFromSupplier(() -> replayService.getNewestReplays(PAGE_SIZE, page), firstLoad);
+        displayReplaysFromSupplier(() -> replayService.getNewestReplaysWithMeta(PAGE_SIZE, page), firstLoad);
         break;
       case HIGHEST_RATED:
-        displayReplaysFromSupplier(() -> replayService.getHighestRatedReplays(PAGE_SIZE, page), firstLoad);
+        displayReplaysFromSupplier(() -> replayService.getHighestRatedReplaysWithMeta(PAGE_SIZE, page), firstLoad);
         break;
       case PLAYER:
-        displayReplaysFromSupplier(() -> replayService.getReplaysForPlayer(playerId, PAGE_SIZE, page, new SortConfig("startTime", SortOrder.DESC)), firstLoad);
+        displayReplaysFromSupplier(() -> replayService.getReplaysForPlayerWithMeta(playerId, PAGE_SIZE, page, new SortConfig("startTime", SortOrder.DESC)), firstLoad);
         break;
     }
   }
@@ -301,10 +301,10 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
 
   private void loadPreselectedReplays() {
     enterSearchingState();
-    replayService.getNewestReplays(TOP_ELEMENT_COUNT, 1)
+    replayService.getNewestReplaysWithMeta(TOP_ELEMENT_COUNT, 1)
         .thenAccept(replays -> populateReplays(replays.getFirst(), newestPane))
-        .thenCompose(aVoid -> replayService.getHighestRatedReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), highestRatedPane)))
-        .thenCompose(aVoid -> replayService.getOwnReplays(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), ownReplaysPane)))
+        .thenCompose(aVoid -> replayService.getHighestRatedReplaysWithMeta(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), highestRatedPane)))
+        .thenCompose(aVoid -> replayService.getOwnReplaysWithMeta(TOP_ELEMENT_COUNT, 1).thenAccept(highestRatedReplays -> populateReplays(highestRatedReplays.getFirst(), ownReplaysPane)))
         .thenRun(this::enterResultState)
         .exceptionally(throwable -> {
           logger.warn("Could not populate replays", throwable);

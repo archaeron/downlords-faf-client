@@ -88,11 +88,11 @@ public interface FafApiAccessor {
 
   List<FeaturedModFile> getFeaturedModFiles(FeaturedMod featuredMod, Integer version);
 
-  Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplays(int count, int page);
+  Tuple<List<Game>, java.util.Map<String, ?>> getNewestReplaysWithMeta(int count, int page);
 
-  Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplays(int count, int page);
+  Tuple<List<Game>, java.util.Map<String, ?>> getHighestRatedReplaysWithMeta(int count, int page);
 
-  Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQuery(String query, int maxResults, int page, SortConfig sortConfig);
+  Tuple<List<Game>, java.util.Map<String, ?>> findReplaysByQueryWithMeta(String query, int maxResults, int page, SortConfig sortConfig);
 
   Optional<MapVersion> findMapByFolderName(String folderName);
 
