@@ -277,10 +277,9 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   private void onFirstPageOpened(SearchConfig searchConfig) {
+    onPageChange(searchConfig, 1, true);
     if (pagination.getCurrentPageIndex() != 0) {
       pagination.setCurrentPageIndex(0);
-    } else {
-      onPageChange(searchConfig, 1, true);
     }
   }
 
