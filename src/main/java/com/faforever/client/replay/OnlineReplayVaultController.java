@@ -83,7 +83,6 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   private ReplaySearchType replaySearchType;
   private int playerId;
   private final ObjectProperty<State> state;
-  private final Boolean newestReplaysLoaded = false;
 
   public OnlineReplayVaultController(ReplayService replayService, UiService uiService, NotificationService notificationService, I18n i18n, PreferencesService preferencesService, ReportingService reportingService) {
     this.replayService = replayService;
@@ -288,15 +287,11 @@ public class OnlineReplayVaultController extends AbstractViewController<Node> {
   }
 
   public void onBackButtonClicked() {
-    if (newestReplaysLoaded) {
-      enterResultState();
-    } else {
-      loadPreselectedReplays();
-    }
+    loadPreselectedReplays();
   }
 
   public void onRefreshButtonClicked() {
-    loadPreselectedReplays();
+    onPageChange(searchController.getLastSearchConfig(), pagination.currentPageIndexProperty().getValue()+1, false);
   }
 
   private void loadPreselectedReplays() {
