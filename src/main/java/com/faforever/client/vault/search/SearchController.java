@@ -45,6 +45,8 @@ public class SearchController implements Controller<Pane> {
   private final UiService uiService;
   private final I18n i18n;
   private final PreferencesService preferencesService;
+
+  private final static String END_TIME_QUERY = "endTime=ge=";
   /**
    * The first query element.
    */
