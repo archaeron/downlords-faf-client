@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="8.0.7" transformSequenceNumber="8">
-  <directoryPresets config="./src/media/appicon" />
+  <directoryPresets config="./build/install/downlords-faf-client" />
   <application name="Downlord's FAF Client" applicationId="2848-7798-9769-5013" mediaDir="./build/install4j" lzmaCompression="true" pack200Compression="true" shortName="dfc" publisher="Downlord" publisherWeb="https://github.com/FAForever/downlords-faf-client" allPathsRelative="true" autoSave="true" macVolumeId="e230e730a6fc064c" javaMinVersion="14" javaMaxVersion="14" allowBetaVM="true">
     <searchSequence empty="true" />
-    <jreBundles jdkProviderId="AdoptOpenJDK" release="openjdk14/jdk-14.0.1+7" />
+    <jreBundles jdkProviderId="AdoptOpenJDK" release="openjdk14/jdk-14.0.2+12" />
   </application>
   <files>
     <filesets>
@@ -20,8 +20,8 @@
       <mountPoint id="887" root="886" />
     </mountPoints>
     <entries>
-      <dirEntry mountPoint="882" file="./build/install/downlords-faf-client" entryMode="subdir" subDirectory="lib" />
-      <dirEntry mountPoint="882" file="./build/resources/native" fileMode="755" overrideFileMode="true" subDirectory="natives" />
+      <dirEntry mountPoint="882" file="./build/install/downlords-faf-client/lib" entryMode="subdir" subDirectory="lib" />
+      <dirEntry mountPoint="882" file="./build/resources/tools" fileMode="755" overrideFileMode="true" subDirectory="tools" />
       <dirEntry mountPoint="887" file="./updater/build/install/updater" entryMode="subdir" subDirectory="lib" />
     </entries>
   </files>
