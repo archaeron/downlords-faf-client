@@ -52,7 +52,7 @@ public abstract class AbstractCheckForUpdateTask extends CompletableTask<UpdateI
     }
 
     URL currentVersionConfigUrl = getClass().getResource("/update4j/update4j.xml");
-    Configuration oldConfig = readConfiguration(currentVersionConfigUrl);
+    Configuration oldConfig = currentVersionConfigUrl != null ? readConfiguration(currentVersionConfigUrl) : null;
 
     long size = calculateUpdateSize(oldConfig, newConfig);
 
@@ -84,7 +84,6 @@ public abstract class AbstractCheckForUpdateTask extends CompletableTask<UpdateI
         .sum();
   }
 
-  @Nullable
   private Configuration readConfiguration(URL update4jConfigUrl) {
     Configuration newConfig;
     try (Reader reader = new InputStreamReader(update4jConfigUrl.openStream())) {

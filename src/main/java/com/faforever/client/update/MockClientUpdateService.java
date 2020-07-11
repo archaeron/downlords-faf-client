@@ -16,13 +16,8 @@ import java.util.concurrent.CompletableFuture;
 public class MockClientUpdateService implements ClientUpdateService {
 
   @Override
-  public CompletableFuture<UpdateInfo> getNewestUpdate() {
+  public CompletableFuture<UpdateInfo> checkForUpdateInBackground() {
     return CompletableFuture.completedFuture(null);
-  }
-
-  @Override
-  public void checkForUpdateInBackground() {
-
   }
 
   @Override

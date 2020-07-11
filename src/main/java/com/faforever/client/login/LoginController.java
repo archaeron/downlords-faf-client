@@ -100,7 +100,7 @@ public class LoginController implements Controller<Pane> {
   }
 
   public void initialize() {
-    updateInfoFuture = clientUpdateService.getNewestUpdate();
+    updateInfoFuture = clientUpdateService.checkForUpdateInBackground();
 
     downloadUpdateButton.managedProperty().bind(downloadUpdateButton.visibleProperty());
     downloadUpdateButton.setVisible(false);

@@ -6,11 +6,9 @@ import java.util.concurrent.CompletableFuture;
 public interface ClientUpdateService {
 
   /**
-   * Returns information about an available newest update. Returns {@code null} if no update is available.
+   * Returns information about an available newest update. Future contains {@code null} if no update is available.
    */
-  CompletableFuture<UpdateInfo> getNewestUpdate();
-
-  void checkForUpdateInBackground();
+  CompletableFuture<UpdateInfo> checkForUpdateInBackground();
 
   String getCurrentVersion();
 
