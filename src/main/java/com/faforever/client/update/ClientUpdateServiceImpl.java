@@ -41,8 +41,6 @@ public class ClientUpdateServiceImpl implements ClientUpdateService {
   private final PlatformService platformService;
   private final ApplicationContext applicationContext;
   private final PreferencesService preferencesService;
-  private final CompletableFuture<UpdateInfo> updateInfoFuture;
-  private final CompletableFuture<UpdateInfo> updateInfoBetaFuture;
 
   @VisibleForTesting
   String currentVersion;
@@ -63,72 +61,53 @@ public class ClientUpdateServiceImpl implements ClientUpdateService {
 
     currentVersion = defaultString(Version.getCurrentVersion(), DEVELOPMENT_VERSION_STRING);
     log.info("Current version: {}", currentVersion);
-
-    CheckForReleaseUpdateTask task = applicationContext.getBean(CheckForReleaseUpdateTask.class);
-    updateInfoFuture = taskService.submitTask(task).getFuture();
-
-    CheckForBetaUpdateTask betaTask = applicationContext.getBean(CheckForBetaUpdateTask.class);
-    updateInfoBetaFuture = taskService.submitTask(betaTask).getFuture();
-  }
-
-  /**
-   * Returns information about the newest update. Returns {@code null} if no update is available.
-   */
-  @Override
-  public CompletableFuture<UpdateInfo> getNewestUpdate() {
-    return updateInfoFuture;
   }
 
   @Override
-  public void checkForUpdateInBackground() {
+  public CompletableFuture<UpdateInfo> checkForUpdateInBackground() {
+    CompletableFuture<UpdateInfo> task;
     if (preferencesService.getPreferences().isPrereleaseCheckEnabled()) {
-      checkForBetaUpdateInBackground();
+      task = taskService.submitTask(applicationContext.getBean(CheckForBetaUpdateTask.class)).getFuture();
     } else {
-      checkForRegularUpdateInBackground();
+      task = taskService.submitTask(applicationContext.getBean(CheckForReleaseUpdateTask.class)).getFuture();
     }
-  }
 
-  @EventListener
-  public void onLoggedInEvent(LoggedInEvent loggedInEvent) {
-    checkForUpdateInBackground();
-  }
-
-  /**
-   * Creates an update notification with actions to download and install latest release
-   */
-  private void checkForRegularUpdateInBackground() {
-    notificationOnUpdate(updateInfoFuture);
-  }
-
-  /**
-   * Creates an update notification with actions to download and install latest beta release
-   */
-  private void checkForBetaUpdateInBackground() {
-    notificationOnUpdate(updateInfoBetaFuture);
-  }
-
-  private void notificationOnUpdate(CompletableFuture<UpdateInfo> updateInfoSupplier) {
-    updateInfoSupplier.thenAccept(updateInfo -> {
-      if (updateInfo == null) {
-        return;
-      }
-
-      if (!Version.shouldUpdate(getCurrentVersion(), updateInfo.getName())) {
-        return;
-      }
-
-      notificationService.addNotification(new PersistentNotification(
-          i18n.get(updateInfo.isPrerelease() ? "clientUpdateAvailable.prereleaseNotification" : "clientUpdateAvailable.notification", updateInfo.getName(), formatSize(updateInfo.getSize(), i18n.getUserSpecificLocale())),
-          INFO, asList(
-          new Action(i18n.get("clientUpdateAvailable.downloadAndInstall"), event -> updateInBackground(updateInfo)),
-          new Action(i18n.get("clientUpdateAvailable.releaseNotes"), Action.Type.OK_STAY,
-              event -> platformService.showDocument(updateInfo.getReleaseNotesUrl().toExternalForm())
-          )))
-      );
+    return task.thenApply(updateInfo -> {
+      onUpdateInfo(updateInfo);
+      return updateInfo;
     }).exceptionally(throwable -> {
       log.warn("Client update check failed", throwable);
       return null;
     });
+  }
+
+  @EventListener(classes = LoggedInEvent.class)
+  public void onLoggedInEvent() {
+    checkForUpdateInBackground();
+  }
+
+  private void onUpdateInfo(UpdateInfo updateInfo) {
+    if (updateInfo == null) {
+      return;
+    }
+
+    if (!Version.shouldUpdate(getCurrentVersion(), updateInfo.getName())) {
+      return;
+    }
+
+    if (preferencesService.getPreferences().isAutoUpdate()) {
+      updateInBackground(updateInfo);
+      return;
+    }
+
+    notificationService.addNotification(new PersistentNotification(
+        i18n.get(updateInfo.isPrerelease() ? "clientUpdateAvailable.prereleaseNotification" : "clientUpdateAvailable.notification", updateInfo.getName(), formatSize(updateInfo.getSize(), i18n.getUserSpecificLocale())),
+        INFO, asList(
+        new Action(i18n.get("clientUpdateAvailable.downloadAndInstall"), event -> updateInBackground(updateInfo)),
+        new Action(i18n.get("clientUpdateAvailable.releaseNotes"), Action.Type.OK_STAY,
+            event -> platformService.showDocument(updateInfo.getReleaseNotesUrl().toExternalForm())
+        )))
+    );
   }
 
   @Override
