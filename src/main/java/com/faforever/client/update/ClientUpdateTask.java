@@ -4,7 +4,6 @@ import com.faforever.client.i18n.I18n;
 import com.faforever.client.io.FileUtils;
 import com.faforever.client.preferences.PreferencesService;
 import com.faforever.client.task.CompletableTask;
-import com.faforever.client.updater.Updater;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +14,7 @@ import org.update4j.service.UpdateHandler;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -60,7 +60,11 @@ public class ClientUpdateTask extends CompletableTask<Void> {
     Path jreDir = copyJre(updateDirectory);
     Path updaterJar = copyUpdaterJar(updateDirectory);
 
-    String command = String.format("%s -jar %s %s", jreDir.resolve("bin/java").toAbsolutePath(), updaterJar.toAbsolutePath(), updateDirectory);
+    String command = String.format("%s -jar %s %s %d",
+        jreDir.resolve("bin/java").toAbsolutePath(),
+        updaterJar.toAbsolutePath(),
+        updateDirectory,
+        ManagementFactory.getRuntimeMXBean().getPid());
     log.info("Starting updater using command: {}", command);
     Process exec = Runtime.getRuntime().exec(command);
     log.info("Updater pid is {}", exec.pid());
@@ -88,9 +92,9 @@ public class ClientUpdateTask extends CompletableTask<Void> {
 
   @SneakyThrows
   private URL getUpdaterJar() {
-    URL location = Updater.class.getProtectionDomain().getCodeSource().getLocation();
-    if (location.toExternalForm().endsWith(".jar")) {
-      return location;
+    URL resource = getClass().getResource("/updater/updater.jar");
+    if (resource != null) {
+      return resource;
     }
 
     // For development only, where there is no JAR
