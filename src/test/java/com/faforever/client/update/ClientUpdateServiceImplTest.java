@@ -28,6 +28,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClientUpdateServiceImplTest {
@@ -87,13 +88,8 @@ public class ClientUpdateServiceImplTest {
 
     verify(taskService).submitTask(checkForReleaseUpdateTask);
 
-    ArgumentCaptor<PersistentNotification> captor = ArgumentCaptor.forClass(PersistentNotification.class);
-
-    verify(notificationService).addNotification(captor.capture());
-    PersistentNotification persistentNotification = captor.getValue();
-
-    verify(i18n).get("clientUpdateAvailable.notification", "v0.4.9.0-RC1", Bytes.formatSize(56079360L, i18n.getUserSpecificLocale()));
-    assertThat(persistentNotification.getSeverity(), is(INFO));
+    // The method used to trigger a notification but it should no longer
+    verifyNoInteractions(notificationService);
   }
 
   /**
@@ -109,12 +105,7 @@ public class ClientUpdateServiceImplTest {
 
     verify(taskService).submitTask(checkForBetaUpdateTask);
 
-    ArgumentCaptor<PersistentNotification> captor = ArgumentCaptor.forClass(PersistentNotification.class);
-
-    verify(notificationService).addNotification(captor.capture());
-    PersistentNotification persistentNotification = captor.getValue();
-
-    verify(i18n).get("clientUpdateAvailable.prereleaseNotification", "v0.4.9.1-alpha", Bytes.formatSize(56079360L, i18n.getUserSpecificLocale()));
-    assertThat(persistentNotification.getSeverity(), is(INFO));
+    // The method used to trigger a notification but it should no longer
+    verifyNoInteractions(notificationService);
   }
 }
