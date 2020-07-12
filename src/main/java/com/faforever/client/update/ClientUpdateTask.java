@@ -4,7 +4,6 @@ import com.faforever.client.i18n.I18n;
 import com.faforever.client.io.FileUtils;
 import com.faforever.client.preferences.PreferencesService;
 import com.faforever.client.task.CompletableTask;
-import com.faforever.client.updater.Updater;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -88,9 +87,9 @@ public class ClientUpdateTask extends CompletableTask<Void> {
 
   @SneakyThrows
   private URL getUpdaterJar() {
-    URL location = Updater.class.getProtectionDomain().getCodeSource().getLocation();
-    if (location.toExternalForm().endsWith(".jar")) {
-      return location;
+    URL resource = getClass().getResource("/updater/updater.jar");
+    if (resource.toExternalForm().endsWith(".jar")) {
+      return resource;
     }
 
     // For development only, where there is no JAR

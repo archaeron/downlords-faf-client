@@ -45,7 +45,7 @@ public class CheckForReleaseUpdateTaskTest extends AbstractPlainJavaFxTest {
   @Before
   public void setUp() throws Exception {
     clientProperties = new ClientProperties();
-    instance = new CheckForReleaseUpdateTask(i18n, preferencesService);
+    instance = new CheckForReleaseUpdateTask(i18n, preferencesService, restTemplateBuilder);
 
     terminateLatch = new CountDownLatch(1);
   }
