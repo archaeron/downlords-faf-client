@@ -16,11 +16,13 @@ import com.faforever.client.theme.UiService;
 import com.faforever.client.util.TimeService;
 import com.faforever.client.vault.map.MapPreviewTableCellController;
 import com.google.common.base.Joiner;
+import javafx.application.Platform;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableMap;
 import javafx.scene.Node;
+import javafx.scene.control.Pagination;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -73,12 +75,12 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   public TableColumn<Replay, Duration> durationColumn;
   public TableColumn<Replay, String> gameTypeColumn;
   public TableColumn<Replay, MapBean> mapColumn;
+  public Pagination pagination;
 
   private Boolean isDisplayingForFirstTime = true;
 
-  @SuppressWarnings("unchecked")
+  @Override
   public void initialize() {
-
     replayTableView.setRowFactory(param -> replayRowFactory());
     replayTableView.getSortOrder().setAll(Collections.singletonList(timeColumn));
 
@@ -100,6 +102,13 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
     durationColumn.setCellValueFactory(this::durationCellValueFactory);
     durationColumn.setCellFactory(this::durationCellFactory);
+
+    pagination.managedProperty().bind(pagination.visibleProperty());
+    pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
+      if (newValue.intValue() != oldValue.intValue()) {
+        replayService.loadPage(newValue.intValue() + 1);
+      }
+    });
   }
 
   @Override
@@ -114,8 +123,10 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   }
 
   protected void loadLocalReplaysInBackground() {
-    replayService.startLoadingAndWatchingLocalReplays();
+    int pageCount = replayService.startLoadingAndWatchingLocalReplays();
+    Platform.runLater(() -> pagination.setPageCount(pageCount));
   }
+
 
   @NotNull
   private TableRow<Replay> replayRowFactory() {
@@ -153,7 +164,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Temporal> timeCellFactory(TableColumn<Replay, Temporal> column) {
     TextFieldTableCell<Replay, Temporal> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<Temporal>() {
+    cell.setConverter(new StringConverter<>() {
       @Override
       public String toString(Temporal object) {
         return timeService.lessThanOneDayAgo(object);
@@ -171,7 +182,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
     MapPreviewTableCellController controller = uiService.loadFxml("theme/vault/map/map_preview_table_cell.fxml");
     final ImageView imageView = controller.getRoot();
 
-    TableCell<Replay, MapBean> cell = new TableCell<Replay, MapBean>() {
+    TableCell<Replay, MapBean> cell = new TableCell<>() {
 
       @Override
       protected void updateItem(MapBean map, boolean empty) {
@@ -197,7 +208,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Number> idCellFactory(TableColumn<Replay, Number> column) {
     TextFieldTableCell<Replay, Number> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<Number>() {
+    cell.setConverter(new StringConverter<>() {
       @Override
       public String toString(Number object) {
         if (object.intValue() == 0) {
@@ -216,7 +227,7 @@ public class ReplayVaultController extends AbstractViewController<Node> {
 
   private TableCell<Replay, Duration> durationCellFactory(TableColumn<Replay, Duration> column) {
     TextFieldTableCell<Replay, Duration> cell = new TextFieldTableCell<>();
-    cell.setConverter(new StringConverter<Duration>() {
+    cell.setConverter(new StringConverter<>() {
       @Override
       public String toString(Duration object) {
         if (object == null) {
@@ -250,13 +261,28 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   public void onLocalReplaysChanged(LocalReplaysChangedEvent event) {
     Collection<Replay> newReplays = event.getNewReplays();
     Collection<Replay> deletedReplays = event.getDeletedReplays();
+    int pageCount = replayService.getLocalReplaysPageCount();
+    if (event.isChangedInFolder()) {
+      Platform.runLater(() -> replayTableView.getItems().clear());
+      if (pagination.getCurrentPageIndex() == 0) {
+        Platform.runLater(() -> {
+          replayService.loadPage(1);
+        });
+      } else {
+        Platform.runLater(() -> {
+        pagination.setCurrentPageIndex(0);
+        });
+      }
+      Platform.runLater(() -> pagination.setPageCount(pageCount));
+    }
     replayTableView.getItems().addAll(newReplays);
     replayTableView.getItems().removeAll(deletedReplays);
     replayTableView.sort();
     replayTableView.setVisible(true);
     loadingPane.setVisible(false);
   }
-  
+
+  @Override
   public Node getRoot() {
     return replayVaultRoot;
   }

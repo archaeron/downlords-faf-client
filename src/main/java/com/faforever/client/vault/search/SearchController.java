@@ -55,7 +55,7 @@ public class SearchController implements Controller<Pane> {
   public ComboBox<SortOrder> sortOrderChoiceBox;
   public HBox sortBox;
 
-  private List<LogicalNodeController> queryNodes;
+  private final List<LogicalNodeController> queryNodes;
   private InvalidationListener queryInvalidationListener;
   /**
    * Called with the query string when the user hits "search".
@@ -74,6 +74,7 @@ public class SearchController implements Controller<Pane> {
     queryNodes = new ArrayList<>();
   }
 
+  @Override
   public void initialize() {
     queryTextField.managedProperty().bind(queryTextField.visibleProperty());
     queryTextField.visibleProperty().bind(displayQueryCheckBox.selectedProperty());
@@ -94,7 +95,7 @@ public class SearchController implements Controller<Pane> {
   }
 
   private void initSorting() {
-    sortPropertyComboBox.setConverter(new StringConverter<Property>() {
+    sortPropertyComboBox.setConverter(new StringConverter<>() {
       @Override
       public String toString(Property property) {
         return i18n.get(property.getI18nKey());
@@ -105,7 +106,7 @@ public class SearchController implements Controller<Pane> {
         throw new UnsupportedOperationException("Not supported");
       }
     });
-    sortOrderChoiceBox.setConverter(new StringConverter<SortOrder>() {
+    sortOrderChoiceBox.setConverter(new StringConverter<>() {
       @Override
       public String toString(SortOrder order) {
         return i18n.get(order.getI18nKey());
