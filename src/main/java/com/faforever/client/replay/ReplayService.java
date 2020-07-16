@@ -62,7 +62,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
@@ -74,7 +73,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -137,11 +135,10 @@ public class ReplayService {
   private final MapService mapService;
   private final ApplicationEventPublisher publisher;
   private final MapGeneratorService mapGeneratorService;
-  private final ExecutorService executorService;
   private Thread directoryWatcherThread;
-  private WatchService watchService;
   protected List<Replay> localReplays = new ArrayList<>();
   private double localReplaysItemsSize;
+  private int pageCountLocalReplays;
 
   public int startLoadingAndWatchingLocalReplays() {
     Path replaysDirectory = preferencesService.getReplaysDirectory();
@@ -149,43 +146,35 @@ public class ReplayService {
       noCatch(() -> createDirectories(replaysDirectory));
     }
 
-    int pageCount = 0;
-    String replayFileGlob = clientProperties.getReplay().getReplayFileGlob();
-    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(replaysDirectory, replayFileGlob)) {
-      localReplaysItemsSize = StreamSupport.stream(directoryStream.spliterator(), false).count();
-      pageCount = (int) Math.ceil(localReplaysItemsSize / (double) REPLAYS_PER_PAGE);
-    } catch (IOException e) {
-      logger.warn("Failed loading total amount of replays", e);
-    }
-
-    LoadLocalReplaysTask loadLocalReplaysTask = applicationContext.getBean(LoadLocalReplaysTask.class);
-    taskService.submitTask(loadLocalReplaysTask).getFuture().thenAccept(replays -> {
-      localReplays.clear();
-      localReplays.addAll(replays);
-      publisher.publishEvent(new LocalReplaysChangedEvent(this, replays, new ArrayList<>(), false));
-    });
-
     try {
       Optional.ofNullable(directoryWatcherThread).ifPresent(Thread::interrupt);
       directoryWatcherThread = startDirectoryWatcher(replaysDirectory);
     } catch (IOException e) {
       logger.warn("Failed to start watching the local replays directory");
     }
-    return pageCount;
+
+    return reloadLocalReplays();
+  }
+
+  private int reloadLocalReplays() {
+    Path replaysDirectory = preferencesService.getReplaysDirectory();
+    pageCountLocalReplays = 0;
+    String replayFileGlob = clientProperties.getReplay().getReplayFileGlob();
+    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(replaysDirectory, replayFileGlob)) {
+      localReplaysItemsSize = StreamSupport.stream(directoryStream.spliterator(), false).count();
+      pageCountLocalReplays = (int) Math.ceil(localReplaysItemsSize / (double) REPLAYS_PER_PAGE);
+    } catch (IOException e) {
+      logger.warn("Failed loading total amount of replays", e);
+    }
+
+    loadPage(1);
+    return pageCountLocalReplays;
   }
 
   public void loadPage(int pageNum) {
     LoadLocalReplaysTask loadLocalReplaysTask = applicationContext.getBean(LoadLocalReplaysTask.class).setPageNum(pageNum);
-    taskService.submitTask(loadLocalReplaysTask).getFuture().thenAccept(replays -> {
-      List<Replay> oldReplays = new ArrayList<>(localReplays);
-      localReplays.clear();
-      localReplays.addAll(replays);
-      publisher.publishEvent(new LocalReplaysChangedEvent(this, replays, oldReplays, false));
-    });
-  }
-
-  public Collection<Replay> getLocalReplays() {
-    return localReplays;
+    taskService.submitTask(loadLocalReplaysTask).getFuture()
+        .thenAccept(replays -> publisher.publishEvent(new LocalReplaysChangedEvent(pageNum, pageCountLocalReplays, replays)));
   }
 
   protected Thread startDirectoryWatcher(Path replaysDirectory) throws IOException {
@@ -194,7 +183,7 @@ public class ReplayService {
         replaysDirectory.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
         while (!Thread.interrupted()) {
           WatchKey key = watcher.take();
-          onLocalReplaysWatchEvent(key);
+          reloadLocalReplays();
           key.reset();
         }
       } catch (InterruptedException e) {
@@ -204,55 +193,6 @@ public class ReplayService {
     thread.setDaemon(true);
     thread.start();
     return thread;
-  }
-
-  @VisibleForTesting
-  protected void onLocalReplaysWatchEvent(WatchKey key) {
-    List<CompletableFuture<Replay>> newReplaysFutures = new ArrayList<>();
-    Collection<Replay> deletedReplays = new ArrayList<>();
-    int deletedFilesCount = 0;
-    for (WatchEvent<?> watchEvent : key.pollEvents()) {
-      Path path = (Path) watchEvent.context();
-      Path fullPathToReplay = preferencesService.getReplaysDirectory().resolve(path);
-
-      if (watchEvent.kind() == ENTRY_CREATE) {
-        newReplaysFutures.add(tryLoadingLocalReplay(fullPathToReplay));
-      } else if (watchEvent.kind() == ENTRY_DELETE) {
-        deletedFilesCount++;
-        Optional<Replay> existingReplay = localReplays
-            .stream()
-            .filter(replay -> replay.getReplayFile().compareTo(fullPathToReplay) == 0)
-            .findFirst();
-
-        if (existingReplay.isPresent()) {
-          Replay deletedReplay = existingReplay.get();
-          deletedReplays.add(deletedReplay);
-          localReplays.remove(deletedReplay);
-        }
-      }
-    }
-
-    CompletableFuture[] replayFuturesArray = newReplaysFutures.toArray(new CompletableFuture[newReplaysFutures.size()]);
-    CompletableFuture<List<Replay>> newReplaysFuture = CompletableFuture.allOf(replayFuturesArray)
-        .thenApply(ignoredVoid ->
-            newReplaysFutures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList())
-        );
-
-    try {
-      List<Replay> newReplays = newReplaysFuture.get();
-      localReplays.addAll(newReplays);
-      localReplaysItemsSize = localReplaysItemsSize + newReplays.size() - deletedFilesCount;
-      publisher.publishEvent(new LocalReplaysChangedEvent(this, newReplays, deletedReplays, true));
-    } catch (Exception e) {
-      logger.warn("Failed to load new local replays ({})", e.getMessage());
-    }
-  }
-
-  public int getLocalReplaysPageCount() {
-    return (int) Math.ceil(localReplaysItemsSize / (double) REPLAYS_PER_PAGE);
   }
 
   @VisibleForTesting

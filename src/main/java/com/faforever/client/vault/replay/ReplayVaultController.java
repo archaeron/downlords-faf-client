@@ -7,15 +7,14 @@ import com.faforever.client.main.event.NavigateEvent;
 import com.faforever.client.map.MapBean;
 import com.faforever.client.map.MapService;
 import com.faforever.client.map.MapService.PreviewSize;
-import com.faforever.client.notification.NotificationService;
 import com.faforever.client.replay.Replay;
 import com.faforever.client.replay.ReplayService;
-import com.faforever.client.reporting.ReportingService;
-import com.faforever.client.task.TaskService;
 import com.faforever.client.theme.UiService;
 import com.faforever.client.util.TimeService;
 import com.faforever.client.vault.map.MapPreviewTableCellController;
 import com.google.common.base.Joiner;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.SimpleObjectProperty;
@@ -33,37 +32,32 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Slf4j
 // TODO reduce dependencies
 public class ReplayVaultController extends AbstractViewController<Node> {
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  private final NotificationService notificationService;
   private final ReplayService replayService;
   private final MapService mapService;
-  private final TaskService taskService;
   private final I18n i18n;
   private final TimeService timeService;
-  private final ReportingService reportingService;
-  private final ApplicationContext applicationContext;
   private final UiService uiService;
+  private final EventBus eventBus;
 
   public Pane replayVaultRoot;
   public VBox loadingPane;
@@ -109,6 +103,8 @@ public class ReplayVaultController extends AbstractViewController<Node> {
         replayService.loadPage(newValue.intValue() + 1);
       }
     });
+
+    eventBus.register(this);
   }
 
   @Override
@@ -257,26 +253,14 @@ public class ReplayVaultController extends AbstractViewController<Node> {
     return new SimpleObjectProperty<>(Duration.between(startTime, endTime));
   }
 
-  @EventListener
+  @Subscribe
   public void onLocalReplaysChanged(LocalReplaysChangedEvent event) {
-    Collection<Replay> newReplays = event.getNewReplays();
-    Collection<Replay> deletedReplays = event.getDeletedReplays();
-    int pageCount = replayService.getLocalReplaysPageCount();
-    if (event.isChangedInFolder()) {
-      Platform.runLater(() -> replayTableView.getItems().clear());
-      if (pagination.getCurrentPageIndex() == 0) {
-        Platform.runLater(() -> {
-          replayService.loadPage(1);
-        });
-      } else {
-        Platform.runLater(() -> {
-        pagination.setCurrentPageIndex(0);
-        });
-      }
-      Platform.runLater(() -> pagination.setPageCount(pageCount));
-    }
-    replayTableView.getItems().addAll(newReplays);
-    replayTableView.getItems().removeAll(deletedReplays);
+    Platform.runLater(() -> loadReplays(event));
+  }
+
+  private void loadReplays(LocalReplaysChangedEvent event) {
+    pagination.setCurrentPageIndex(event.getPage());
+    pagination.setPageCount(event.getTotalPages());
     replayTableView.sort();
     replayTableView.setVisible(true);
     loadingPane.setVisible(false);
