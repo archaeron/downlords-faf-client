@@ -36,6 +36,7 @@ import com.github.rutledgepaulv.qbuilders.conditions.Condition;
 import com.github.rutledgepaulv.qbuilders.visitors.RSQLVisitor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.eventbus.EventBus;
 import com.google.common.net.UrlEscapers;
 import com.google.common.primitives.Bytes;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,6 @@ import org.eclipse.jgit.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -133,7 +133,7 @@ public class ReplayService {
   private final FafService fafService;
   private final ModService modService;
   private final MapService mapService;
-  private final ApplicationEventPublisher publisher;
+  private final EventBus eventBus;
   private final MapGeneratorService mapGeneratorService;
   private Thread directoryWatcherThread;
   protected List<Replay> localReplays = new ArrayList<>();
@@ -174,7 +174,7 @@ public class ReplayService {
   public void loadPage(int pageNum) {
     LoadLocalReplaysTask loadLocalReplaysTask = applicationContext.getBean(LoadLocalReplaysTask.class).setPageNum(pageNum);
     taskService.submitTask(loadLocalReplaysTask).getFuture()
-        .thenAccept(replays -> publisher.publishEvent(new LocalReplaysChangedEvent(pageNum, pageCountLocalReplays, replays)));
+        .thenAccept(replays -> eventBus.post(new LocalReplaysChangedEvent(pageNum, pageCountLocalReplays, replays)));
   }
 
   protected Thread startDirectoryWatcher(Path replaysDirectory) throws IOException {
