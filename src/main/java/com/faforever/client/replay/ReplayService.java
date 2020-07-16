@@ -39,6 +39,7 @@ import com.google.common.base.Splitter;
 import com.google.common.eventbus.EventBus;
 import com.google.common.net.UrlEscapers;
 import com.google.common.primitives.Bytes;
+import javafx.application.Platform;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -140,7 +141,7 @@ public class ReplayService {
   private double localReplaysItemsSize;
   private int pageCountLocalReplays;
 
-  public int startLoadingAndWatchingLocalReplays() {
+  public void startLoadingAndWatchingLocalReplays() {
     Path replaysDirectory = preferencesService.getReplaysDirectory();
     if (Files.notExists(replaysDirectory)) {
       noCatch(() -> createDirectories(replaysDirectory));
@@ -153,12 +154,12 @@ public class ReplayService {
       logger.warn("Failed to start watching the local replays directory");
     }
 
-    return reloadLocalReplays();
+    reloadLocalReplays();
   }
 
-  private int reloadLocalReplays() {
+  private void reloadLocalReplays() {
     Path replaysDirectory = preferencesService.getReplaysDirectory();
-    pageCountLocalReplays = 0;
+    pageCountLocalReplays = 1;
     String replayFileGlob = clientProperties.getReplay().getReplayFileGlob();
     try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(replaysDirectory, replayFileGlob)) {
       localReplaysItemsSize = StreamSupport.stream(directoryStream.spliterator(), false).count();
@@ -168,13 +169,12 @@ public class ReplayService {
     }
 
     loadPage(1);
-    return pageCountLocalReplays;
   }
 
-  public void loadPage(int pageNum) {
-    LoadLocalReplaysTask loadLocalReplaysTask = applicationContext.getBean(LoadLocalReplaysTask.class).setPageNum(pageNum);
+  public void loadPage(int page) {
+    LoadLocalReplaysTask loadLocalReplaysTask = applicationContext.getBean(LoadLocalReplaysTask.class).setPageNum(page);
     taskService.submitTask(loadLocalReplaysTask).getFuture()
-        .thenAccept(replays -> eventBus.post(new LocalReplaysChangedEvent(pageNum, pageCountLocalReplays, replays)));
+        .thenAccept(replays -> eventBus.post(new LocalReplaysChangedEvent(page, pageCountLocalReplays, replays)));
   }
 
   protected Thread startDirectoryWatcher(Path replaysDirectory) throws IOException {
@@ -183,7 +183,8 @@ public class ReplayService {
         replaysDirectory.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
         while (!Thread.interrupted()) {
           WatchKey key = watcher.take();
-          reloadLocalReplays();
+          Platform.runLater(this::reloadLocalReplays);
+          key.pollEvents();
           key.reset();
         }
       } catch (InterruptedException e) {

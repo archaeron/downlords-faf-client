@@ -111,18 +111,12 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   protected void onDisplay(NavigateEvent navigateEvent) {
     if (isDisplayingForFirstTime) {
       replayTableView.setVisible(false);
-      loadLocalReplaysInBackground();
+      replayService.startLoadingAndWatchingLocalReplays();
       isDisplayingForFirstTime = false;
     }
 
     super.onDisplay(navigateEvent);
   }
-
-  protected void loadLocalReplaysInBackground() {
-    int pageCount = replayService.startLoadingAndWatchingLocalReplays();
-    Platform.runLater(() -> pagination.setPageCount(pageCount));
-  }
-
 
   @NotNull
   private TableRow<Replay> replayRowFactory() {
@@ -259,8 +253,9 @@ public class ReplayVaultController extends AbstractViewController<Node> {
   }
 
   private void loadReplays(LocalReplaysChangedEvent event) {
-    pagination.setCurrentPageIndex(event.getPage());
+    pagination.setCurrentPageIndex(event.getPage() - 1);
     pagination.setPageCount(event.getTotalPages());
+    replayTableView.getItems().setAll(event.getReplays());
     replayTableView.sort();
     replayTableView.setVisible(true);
     loadingPane.setVisible(false);
