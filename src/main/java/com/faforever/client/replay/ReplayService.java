@@ -21,6 +21,7 @@ import com.faforever.client.notification.NotificationService;
 import com.faforever.client.notification.PersistentNotification;
 import com.faforever.client.notification.ReportAction;
 import com.faforever.client.notification.Severity;
+import com.faforever.client.player.Player;
 import com.faforever.client.player.PlayerService;
 import com.faforever.client.preferences.PreferencesService;
 import com.faforever.client.remote.FafService;
@@ -161,9 +162,9 @@ public class ReplayService {
     Path replaysDirectory = preferencesService.getReplaysDirectory();
     pageCountLocalReplays = 1;
     String replayFileGlob = clientProperties.getReplay().getReplayFileGlob();
-    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(replaysDirectory, replayFileGlob)) {
-      localReplaysItemsSize = StreamSupport.stream(directoryStream.spliterator(), false).count();
-      pageCountLocalReplays = (int) Math.ceil(localReplaysItemsSize / (double) REPLAYS_PER_PAGE);
+    try {
+      int localReplaysItemsSize = (int) Files.list(replaysDirectory).filter(path -> path.getFileName().toString().endsWith(replayFileGlob)).count();
+      pageCountLocalReplays = Math.max(1, (int) Math.ceil(localReplaysItemsSize / (double) REPLAYS_PER_PAGE));
     } catch (IOException e) {
       logger.warn("Failed loading total amount of replays", e);
     }
@@ -339,7 +340,7 @@ public class ReplayService {
       throw new RuntimeException("There's no game with ID: " + gameId);
     }
     /* A courtesy towards the replay server so we can see in logs who we're dealing with. */
-    String playerName = playerService.getCurrentPlayer().map(p -> p.getUsername()).orElse("Unknown");
+    String playerName = playerService.getCurrentPlayer().map(Player::getUsername).orElse("Unknown");
 
     URI uri = UriComponentsBuilder.newInstance()
         .scheme(FAF_LIFE_PROTOCOL)

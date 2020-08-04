@@ -23,6 +23,7 @@ import com.faforever.client.user.UserService;
 import com.faforever.client.vault.search.SearchController.SortConfig;
 import com.faforever.client.vault.search.SearchController.SortOrder;
 import com.faforever.commons.replay.ReplayData;
+import com.google.common.eventbus.EventBus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -175,7 +176,7 @@ public class ReplayServiceTest {
   @Mock
   private MapService mapService;
   @Mock
-  private ApplicationEventPublisher publisher;
+  private EventBus publisher;
   @Mock
   private MapGeneratorService mapGeneratorService;
   @Mock
@@ -188,7 +189,7 @@ public class ReplayServiceTest {
     MockitoAnnotations.initMocks(this);
 
     instance = new ReplayService(new ClientProperties(), preferencesService, userService, replayFileReader, notificationService, gameService, playerService,
-        taskService, i18n, reportingService, applicationContext, platformService, fafService, modService, mapService, publisher, mapGeneratorService, executorService);
+        taskService, i18n, reportingService, applicationContext, platformService, fafService, modService, mapService, publisher, mapGeneratorService);
 
     when(preferencesService.getReplaysDirectory()).thenReturn(replayDirectory.getRoot().toPath());
     when(preferencesService.getCorruptedReplaysDirectory()).thenReturn(replayDirectory.getRoot().toPath().resolve("corrupt"));

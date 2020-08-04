@@ -12,6 +12,7 @@ import com.faforever.client.task.TaskService;
 import com.faforever.client.test.AbstractPlainJavaFxTest;
 import com.faforever.client.theme.UiService;
 import com.faforever.client.util.TimeService;
+import com.google.common.eventbus.EventBus;
 import javafx.beans.InvalidationListener;
 import javafx.scene.layout.BorderPane;
 import org.junit.Before;
@@ -57,12 +58,14 @@ public class ReplayVaultControllerTest extends AbstractPlainJavaFxTest {
   @Mock
   private UiService uiService;
   @Mock
+  private EventBus eventBus;
+  @Mock
   private ExecutorService executorService;
 
   @Before
   public void setUp() throws Exception {
-    instance = new ReplayVaultController(notificationService, replayService, mapService, taskService, i18n, timeService,
-        reportingService, applicationContext, uiService);
+   instance = new ReplayVaultController(replayService, mapService, i18n, timeService,
+        uiService, eventBus);
 
     loadFxml("theme/vault/replay/replay_vault.fxml", clazz -> instance);
   }
